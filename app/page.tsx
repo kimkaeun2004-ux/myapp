@@ -1,64 +1,56 @@
-import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="min-h-screen bg-[#f0efe8] text-[#1b1b1b]">
+      <main className="mx-auto flex min-h-screen w-full items-center justify-center px-6 py-10">
+        <section className="relative flex h-[860px] w-[520px] flex-col bg-[#f0efe8] shadow-[0_18px_50px_rgba(0,0,0,0.1)]">
+          <div className="mt-[340px] flex flex-col items-center">
+            <h1
+              className="text-[78px] leading-none tracking-[-0.04em] text-[#efacc5]"
+              style={{ fontFamily: "Arial Black, Helvetica Neue, sans-serif" }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              YEOUN
+            </h1>
+            <p
+              className="mt-[14px] text-[14px] font-medium text-[#2f2f2f]"
+              style={{ fontFamily: "Apple SD Gothic Neo, Noto Sans KR, sans-serif" }}
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+              당신의 공연은 어떤 색이었나요?
+            </p>
+          </div>
+
+          <div className="mt-[42px] flex flex-col items-center gap-[12px]">
+            <Link
+              href="/login?provider=google"
+              className="flex h-[50px] w-[320px] items-center justify-center rounded-[8px] border border-[#efb3ca] bg-[#f0efe8] text-[13px] font-semibold text-[#3c3c3c] transition hover:bg-[#f8f6f0] active:scale-[0.99]"
+              style={{ fontFamily: "Apple SD Gothic Neo, Noto Sans KR, sans-serif" }}
+            >
+              구글 계정으로 시작
+            </Link>
+            <Link
+              href="/login?provider=apple"
+              className="flex h-[50px] w-[320px] items-center justify-center rounded-[8px] border border-[#efb3ca] bg-[#f0efe8] text-[13px] font-semibold text-[#3c3c3c] transition hover:bg-[#f8f6f0] active:scale-[0.99]"
+              style={{ fontFamily: "Apple SD Gothic Neo, Noto Sans KR, sans-serif" }}
+            >
+              애플 계정으로 시작
+            </Link>
+            <Link
+              href="/login?provider=email"
+              className="flex h-[50px] w-[320px] items-center justify-center rounded-[8px] border border-[#efb3ca] bg-[#f0efe8] text-[13px] font-semibold text-[#3c3c3c] transition hover:bg-[#f8f6f0] active:scale-[0.99]"
+              style={{ fontFamily: "Apple SD Gothic Neo, Noto Sans KR, sans-serif" }}
+            >
+              이메일로 시작
+            </Link>
+            <Link
+              href="/login?provider=guest"
+              className="flex h-[50px] w-[320px] items-center justify-center rounded-[8px] border border-[#efb3ca] bg-[#f0efe8] text-[13px] font-semibold text-[#3c3c3c] transition hover:bg-[#f8f6f0] active:scale-[0.99]"
+              style={{ fontFamily: "Apple SD Gothic Neo, Noto Sans KR, sans-serif" }}
+            >
+              게스트로 시작
+            </Link>
+          </div>
+        </section>
       </main>
     </div>
   );
