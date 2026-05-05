@@ -5,12 +5,19 @@ import { useRouter } from "next/navigation";
 
 export default function MainPage() {
   const router = useRouter();
-  const [userName, setUserName] = useState("가은");
+  const [userName, setUserName] = useState("게스트");
   const hasTicket = false;
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    setUserName(params.get("userName") === "게스트" ? "게스트" : "가은");
+    const queryName = params.get("userName");
+    if (!queryName) {
+      setUserName("게스트");
+      return;
+    }
+
+    setUserName(queryName === "게스트" ? "게스트" : "가은");
   }, []);
 
   return (
