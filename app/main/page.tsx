@@ -1,13 +1,17 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function MainPage() {
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const userName = searchParams.get("userName") === "게스트" ? "게스트" : "가은";
+  const [userName, setUserName] = useState("가은");
   const hasTicket = false;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setUserName(params.get("userName") === "게스트" ? "게스트" : "가은");
+  }, []);
 
   return (
     <div
