@@ -111,22 +111,31 @@ export default function ConfirmPage() {
               수정 완료!
             </h2>
 
-            <section className="mx-auto mt-8 w-[84cqw] rounded-[12px] border border-[#e7e7e7] bg-white px-6 py-8 text-center shadow-[0_10px_20px_rgba(0,0,0,0.1)]">
-              <p className="text-[2.5cqw] font-medium tracking-[0.01em]">{ticket.concertName}</p>
-              <p className="mt-2 text-[7cqw] font-black leading-none">{ticket.title}</p>
-              <p className="mt-2 text-[2.9cqw] font-semibold">
+            <section className="mx-auto mt-10 flex h-[430px] w-full flex-col items-center justify-center rounded-[14px] border border-[#ece8e1] bg-white px-[6cqw] text-center shadow-[0_8px_20px_rgba(0,0,0,0.12)]">
+              <p className="text-[2.7cqw] font-bold tracking-[0.01em]">{ticket.concertName}</p>
+              <p className="mt-[1.6cqh] text-[9.2cqw] font-black leading-none">{ticket.title}</p>
+              <p className="mt-[1.9cqh] text-[3.6cqw] font-semibold">
                 {ticket.date} · {ticket.day}
               </p>
-              <p className="mt-2 text-[3cqw] font-bold tracking-[0.02em]">{ticket.artist}</p>
+              <p className="mt-[1.3cqh] text-[3.8cqw] font-extrabold tracking-[0.02em]">{ticket.artist}</p>
             </section>
 
-            <button
-              type="button"
-              onClick={() => router.push("/main")}
-              className="mx-auto mt-10 block h-[52px] w-[120px] rounded-[13px] border border-[#FDAFC7] bg-[#FDAFC7] text-[3.2cqw] font-semibold text-[#2b2b2b] shadow-[0_7px_10px_rgba(0,0,0,0.22),inset_0_2px_0_rgba(255,255,255,0.48)] transition hover:bg-[#f99fbe] active:translate-y-[1px]"
-            >
-              다음
-            </button>
+            <div className="mx-auto mt-8 flex w-full items-center justify-between gap-4">
+              <button
+                type="button"
+                onClick={() => setIsCompleted(false)}
+                className="h-[92px] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-white text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.16)] transition hover:bg-[#fff7fa]"
+              >
+                다시 수정하기
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push("/main")}
+                className="h-[92px] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-[#FDAFC7] text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.45)] transition hover:bg-[#f99fbe]"
+              >
+                다음
+              </button>
+            </div>
           </>
         )}
       </main>
