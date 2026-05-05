@@ -2,53 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Tesseract from "tesseract.js";
-
-type ExtractedTicketInfo = {
-  concertName: string;
-  date: string;
-  artist: string;
-};
-
-function normalizeDate(raw: string) {
-  const cleaned = raw.replace(/[년./]/g, "-").replace(/[월]/g, "-").replace(/[일]/g, "");
-  const dateMatch = cleaned.match(/(20\d{2})-(\d{1,2})-(\d{1,2})/);
-  if (!dateMatch) return "";
-
-  const year = dateMatch[1];
-  const month = dateMatch[2].padStart(2, "0");
-  const day = dateMatch[3].padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function extractTicketInfo(text: string): ExtractedTicketInfo {
-  const lines = text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-
-  const dateLine =
-    lines.find((line) => /(20\d{2})[.\-/년\s]+(\d{1,2})[.\-/월\s]+(\d{1,2})/.test(line)) ?? "";
-  const date = normalizeDate(dateLine);
-
-  const concertName =
-    lines.find((line) =>
-      /(CONCERT|TOUR|ENCORE|FESTIVAL|SHOW|LIVE)/i.test(line),
-    ) ??
-    lines.find((line) => /^[A-Z0-9\s\-:]{6,}$/.test(line)) ??
-    "미분류 티켓";
-
-  const artist =
-    lines.find((line) => /^[가-힣]{2,12}$/.test(line)) ??
-    lines.find((line) => /^[A-Za-z\s]{2,20}$/.test(line)) ??
-    "미상";
-
-  return {
-    concertName,
-    date: date || "미상",
-    artist,
-  };
-}
+// OCR is intentionally deferred to week 10.
 
 export default function ScanPage() {
   const router = useRouter();
@@ -57,7 +11,6 @@ export default function ScanPage() {
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [extractedInfo, setExtractedInfo] = useState<ExtractedTicketInfo | null>(null);
 
   useEffect(() => {
     return () => {
@@ -93,25 +46,8 @@ export default function ScanPage() {
     setErrorMessage("");
 
     try {
-      const canvas = document.createElement("canvas");
-      canvas.width = videoRef.current.videoWidth || 1280;
-      canvas.height = videoRef.current.videoHeight || 720;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error("캔버스 컨텍스트를 가져올 수 없습니다.");
-
-      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-      const imageDataUrl = canvas.toDataURL("image/jpeg", 0.95);
-
-      const result = await Tesseract.recognize(imageDataUrl, "kor+eng");
-      const info = extractTicketInfo(result.data.text);
-      setExtractedInfo(info);
-
-      const params = new URLSearchParams({
-        concertName: info.concertName,
-        date: info.date,
-        artist: info.artist,
-      });
-      router.push(`/create/question?${params.toString()}`);
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      router.push("/create/result");
     } catch {
       setErrorMessage("인식에 실패했습니다. 티켓을 다시 비춰주세요.");
     } finally {
@@ -173,12 +109,6 @@ export default function ScanPage() {
 
           {errorMessage ? (
             <p className="mt-4 text-center text-[3.8cqw] font-semibold text-[#b14d70]">{errorMessage}</p>
-          ) : null}
-
-          {extractedInfo ? (
-            <p className="mt-3 text-center text-[3.4cqw] text-[#3f3f3f]">
-              {extractedInfo.concertName} / {extractedInfo.date} / {extractedInfo.artist}
-            </p>
           ) : null}
         </section>
       </main>
