@@ -1,24 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function MainPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MainContent />
+    </Suspense>
+  );
+}
+
+function MainContent() {
   const router = useRouter();
-  const [userName, setUserName] = useState("게스트");
+  const searchParams = useSearchParams();
+  const queryName = searchParams.get("userName");
+  const userName = queryName === "가은" ? "가은" : "게스트";
   const hasTicket = false;
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const queryName = params.get("userName");
-    if (!queryName) {
-      setUserName("게스트");
-      return;
-    }
-
-    setUserName(queryName === "게스트" ? "게스트" : "가은");
-  }, []);
 
   return (
     <div
