@@ -26,10 +26,19 @@ function CompleteContent() {
   const handleSave = () => {
     if (typeof window === "undefined") return;
     const payload = {
+      id: Date.now(),
       emotions: emotionsParam ?? "",
       quote,
       backImage: backImage ?? "",
     };
+    try {
+      const rawList = window.localStorage.getItem("yeounTickets");
+      const prevList = rawList ? (JSON.parse(rawList) as typeof payload[]) : [];
+      const nextList = [payload, ...prevList].slice(0, 50);
+      window.localStorage.setItem("yeounTickets", JSON.stringify(nextList));
+    } catch {
+      window.localStorage.setItem("yeounTickets", JSON.stringify([payload]));
+    }
     window.localStorage.setItem("yeounTicket", JSON.stringify(payload));
     router.push("/main");
   };
