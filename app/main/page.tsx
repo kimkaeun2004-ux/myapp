@@ -1,7 +1,14 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { gradientFromEmotionParam } from "../create/_shared/ticket-gradient";
+
+type StoredTicket = {
+  emotions: string;
+  quote: string;
+  backImage: string;
+};
 
 export default function MainPage() {
   return (
@@ -16,7 +23,31 @@ function MainContent() {
   const searchParams = useSearchParams();
   const queryName = searchParams.get("userName");
   const userName = queryName === "가은" ? "가은" : "게스트";
-  const hasTicket = false;
+  const [ticket, setTicket] = useState<StoredTicket | null>(null);
+  const [showBack, setShowBack] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem("yeounTicket");
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Partial<StoredTicket>;
+      if (parsed && (parsed.emotions || parsed.quote || parsed.backImage)) {
+        setTicket({
+          emotions: parsed.emotions ?? "",
+          quote: parsed.quote ?? "",
+          backImage: parsed.backImage ?? "",
+        });
+      }
+    } catch {
+      // ignore malformed localStorage
+    }
+  }, []);
+
+  const hasTicket = !!ticket;
+  const ticketBackground = ticket
+    ? gradientFromEmotionParam(ticket.emotions || null)
+    : undefined;
 
   return (
     <div
@@ -42,20 +73,41 @@ function MainContent() {
           </button>
 
           {hasTicket ? (
-            <section className="mx-auto mt-[5.2cqh] w-[84.6cqw] rounded-[2.4cqw] bg-gradient-to-b from-[#ffe3b7] via-[#FDAFC7] to-[#FDAFC7] px-[5.1cqw] py-[4.6cqh] text-center shadow-[0_12px_24px_rgba(0,0,0,0.2)]">
-              <p className="text-[2.7cqw] font-bold tracking-[0.01em]">
-                2025 DOYOUNG ENCORE CONCERT
-              </p>
-              <p className="mt-[1.3cqh] text-[8.6cqw] font-black leading-none">YOURS</p>
-              <div className="mt-[1.8cqh] flex items-center justify-center gap-[5.6cqw] text-[3.4cqw] font-bold">
-                <span>2025-10-09</span>
-                <span>도영</span>
-              </div>
-              <p className="mt-[4.2cqh] whitespace-pre-line text-[4.4cqw] font-extrabold leading-[1.35]">
-                {`“산다는 거 견디는 거\n함께라면 조금 더 행복해져”`}
-              </p>
-              <p className="mt-[4.2cqh] text-[4.2cqw] font-extrabold">WITHOUT YOU</p>
-            </section>
+            <button
+              type="button"
+              onClick={() => {
+                if (ticket?.backImage) setShowBack((prev) => !prev);
+              }}
+              className="mx-auto mt-[5.2cqh] flex h-[35cqh] w-[84.6cqw] flex-col items-center justify-center rounded-[2.4cqw] border border-[#ece8e1] bg-white px-[5.1cqw] text-center shadow-[0_12px_24px_rgba(0,0,0,0.2)]"
+              style={!showBack ? { backgroundImage: ticketBackground } : undefined}
+            >
+              {!showBack || !ticket?.backImage ? (
+                <div className="flex h-full w-full flex-col items-center justify-center">
+                  <p className="text-[2.7cqw] font-bold tracking-[0.01em]">
+                    2025 DOYOUNG ENCORE CONCERT
+                  </p>
+                  <p className="mt-[1.3cqh] text-[8.6cqw] font-black leading-none">
+                    YOURS
+                  </p>
+                  <div className="mt-[1.8cqh] flex items-center justify-center gap-[5.6cqw] text-[3.4cqw] font-bold">
+                    <span>2025-10-09</span>
+                    <span>도영</span>
+                  </div>
+                  {ticket.quote ? (
+                    <p className="mt-[3.2cqh] whitespace-pre-wrap text-[4cqw] font-extrabold leading-[1.35]">
+                      {ticket.quote}
+                    </p>
+                  ) : null}
+                </div>
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={ticket.backImage}
+                  alt="티켓 뒷면 이미지"
+                  className="h-full w-full rounded-[2.4cqw] object-cover"
+                />
+              )}
+            </button>
           ) : (
             <section className="mx-auto mt-[5.2cqh] flex h-[35cqh] w-[84.6cqw] items-center justify-center rounded-[2.2cqw] border border-[#FDAFC7] bg-[#ffffff] px-[5.1cqw] text-center shadow-[0_12px_24px_rgba(0,0,0,0.08)]">
               <p className="text-[5cqw] font-bold tracking-[-0.02em] text-[#3c3c3c]">

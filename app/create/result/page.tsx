@@ -13,7 +13,7 @@ export default function ResultPage() {
       <main className="mx-auto w-full max-w-[420px] [container-type:size]">
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => router.push("/main")}
           className="ml-auto block text-[8cqw] leading-none text-[#FDAFC7] transition hover:opacity-80"
           aria-label="닫기"
         >

@@ -28,7 +28,7 @@ function FrontCompleteContent() {
       <main className="mx-auto w-full max-w-[420px] [container-type:size]">
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => router.push("/main")}
           className="ml-auto block text-[8cqw] leading-none text-[#FDAFC7] transition hover:opacity-80"
           aria-label="닫기"
         >
@@ -77,14 +77,17 @@ function FrontCompleteContent() {
         <div className="mx-auto mt-8 flex w-full items-center justify-between gap-4">
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={() => router.push("/main")}
             className="h-[92px] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-white text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.16)] transition hover:bg-[#fff7fa]"
           >
             이전
           </button>
           <button
             type="button"
-            onClick={() => router.push("/main")}
+            onClick={() => {
+              const qs = searchParams.toString();
+              router.push(qs.length > 0 ? `/create/back?${qs}` : "/create/back");
+            }}
             className="h-[92px] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-[#FDAFC7] text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.45)] transition hover:bg-[#f99fbe]"
           >
             뒷면 만들러 가기
