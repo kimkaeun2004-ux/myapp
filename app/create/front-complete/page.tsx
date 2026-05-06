@@ -77,7 +77,7 @@ function FrontCompleteContent() {
         <div className="mx-auto mt-8 flex w-full items-center justify-between gap-4">
           <button
             type="button"
-            onClick={() => router.push("/main")}
+            onClick={() => router.back()}
             className="h-[92px] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-white text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.16)] transition hover:bg-[#fff7fa]"
           >
             이전
