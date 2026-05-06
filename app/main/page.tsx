@@ -55,10 +55,10 @@ function MainContent() {
       style={{ fontFamily: "Inter, sans-serif" }}
     >
       <main className="mx-auto flex h-full w-full items-center justify-center overflow-hidden">
-        <section className="relative -translate-y-[3cqh] flex w-[min(38vw,60dvh)] aspect-[520/860] min-w-[320px] max-w-[420px] flex-col bg-[#FFFFF5] [container-type:size]">
-          <h1 className="mt-[3.7cqh] text-center text-[4cqw] font-bold">홈</h1>
+        <section className="relative flex w-[min(38vw,60dvh)] aspect-[520/860] min-w-[320px] max-w-[420px] flex-col bg-[#FFFFF5] [container-type:size]">
+          <h1 className="mt-[5.4cqh] text-center text-[4cqw] font-bold">홈</h1>
 
-          <div className="mt-[4.2cqh] flex items-center gap-[2.1cqw] px-[6.2cqw]">
+          <div className="mt-[5.2cqh] flex items-center gap-[2.1cqw] px-[6.2cqw]">
             <div className="flex h-[8.8cqw] w-[8.8cqw] items-center justify-center rounded-full bg-[#ece9df] text-[4.8cqw] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]">
               👤
             </div>
@@ -67,7 +67,7 @@ function MainContent() {
 
           <button
             type="button"
-            className="mx-auto mt-[4cqh] flex h-[10.8cqh] w-[84.6cqw] items-center justify-center rounded-[2.2cqw] border border-[#FDAFC7] bg-[#ffffff] text-[4.8cqw] font-extrabold tracking-[-0.02em] text-[#3c3c3c] transition hover:bg-[#fffcef] active:scale-[0.99]"
+            className="mx-auto mt-[3.2cqh] flex h-[min(80px,9dvh)] min-h-[56px] w-[84.6cqw] items-center justify-center rounded-[2.2cqw] border border-[#FDAFC7] bg-[#ffffff] text-[4.8cqw] font-extrabold tracking-[-0.02em] text-[#3c3c3c] transition hover:bg-[#fffcef] active:scale-[0.99]"
           >
             감정 리포트 요약 보기
           </button>
@@ -78,7 +78,7 @@ function MainContent() {
               onClick={() => {
                 if (ticket?.backImage) setShowBack((prev) => !prev);
               }}
-              className={`mx-auto mt-[3.2cqh] flex h-[430px] w-[84.6cqw] flex-col items-center justify-center overflow-hidden rounded-[14px] border border-[#ece8e1] bg-white text-center shadow-[0_12px_24px_rgba(0,0,0,0.2)] ${
+              className={`mx-auto mt-[2.6cqh] flex h-[min(430px,40dvh)] min-h-[270px] w-[84.6cqw] flex-col items-center justify-center overflow-hidden rounded-[14px] border border-[#ece8e1] bg-white text-center shadow-[0_12px_24px_rgba(0,0,0,0.2)] ${
                 !showBack || !ticket?.backImage ? "px-[6cqw]" : ""
               }`}
               style={!showBack ? { backgroundImage: ticketBackground } : undefined}
@@ -109,7 +109,7 @@ function MainContent() {
               )}
             </button>
           ) : (
-            <section className="mx-auto mt-[3.2cqh] flex h-[430px] w-[84.6cqw] items-center justify-center rounded-[14px] border border-[#FDAFC7] bg-[#ffffff] px-[5.1cqw] text-center shadow-[0_12px_24px_rgba(0,0,0,0.08)]">
+            <section className="mx-auto mt-[2.6cqh] flex h-[min(430px,40dvh)] min-h-[270px] w-[84.6cqw] items-center justify-center rounded-[14px] border border-[#FDAFC7] bg-[#ffffff] px-[5.1cqw] text-center shadow-[0_12px_24px_rgba(0,0,0,0.08)]">
               <p className="text-[5cqw] font-bold tracking-[-0.02em] text-[#3c3c3c]">
                 첫 여운을 기록해보세요!
               </p>
@@ -119,7 +119,7 @@ function MainContent() {
           <button
             type="button"
             onClick={() => router.push("/create/scan")}
-            className="mx-auto mt-[3.2cqh] h-[15cqh] w-[84.6cqw] rounded-[2.2cqw] border border-[#FDAFC7] bg-[#FDAFC7] text-[4.8cqw] font-extrabold tracking-[-0.02em] shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition hover:bg-[#f99fbe] active:scale-[0.99]"
+            className="mx-auto mt-[2.4cqh] h-[min(100px,11dvh)] min-h-[60px] w-[84.6cqw] rounded-[2.2cqw] border border-[#FDAFC7] bg-[#FDAFC7] text-[4.8cqw] font-extrabold tracking-[-0.02em] shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition hover:bg-[#f99fbe] active:scale-[0.99]"
           >
             새로운 여운 기록하기
           </button>

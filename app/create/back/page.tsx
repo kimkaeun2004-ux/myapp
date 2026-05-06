@@ -65,7 +65,7 @@ function BackContent() {
 
   return (
     <div
-      className="min-h-screen bg-[#FFFFF5] px-6 py-10 text-[#131313]"
+      className="h-[100dvh] overflow-hidden bg-[#FFFFF5] px-6 py-10 text-[#131313]"
       style={{ fontFamily: "Inter, sans-serif" }}
     >
       <main className="mx-auto w-full max-w-[420px] [container-type:size]">
@@ -93,7 +93,7 @@ function BackContent() {
         <button
           type="button"
           onClick={handlePickImage}
-          className="mx-auto mt-10 flex h-[430px] w-full items-center justify-center overflow-hidden rounded-[14px] border border-[#ece8e1] bg-white text-center shadow-[0_8px_20px_rgba(0,0,0,0.12)]"
+          className="mx-auto mt-10 flex h-[min(430px,40dvh)] w-full items-center justify-center overflow-hidden rounded-[14px] border border-[#ece8e1] bg-white text-center shadow-[0_8px_20px_rgba(0,0,0,0.12)]"
         >
           {previewUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -118,14 +118,14 @@ function BackContent() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="h-[92px] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-white text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.16)] transition hover:bg-[#fff7fa]"
+            className="h-[min(92px,9dvh)] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-white text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.16)] transition hover:bg-[#fff7fa]"
           >
             이전
           </button>
           <button
             type="button"
             onClick={() => goToComplete({ skipBack: true })}
-            className="h-[92px] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-white text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.16)] transition hover:bg-[#fff7fa]"
+            className="h-[min(92px,9dvh)] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-white text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.16)] transition hover:bg-[#fff7fa]"
           >
             스킵하기
           </button>
@@ -134,7 +134,7 @@ function BackContent() {
         <button
           type="button"
           onClick={() => goToComplete({})}
-          className="mx-auto mt-4 h-[92px] w-full rounded-[18px] border border-[#FDAFC7] bg-[#FDAFC7] text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.45)] transition hover:bg-[#f99fbe]"
+          className="mx-auto mt-4 h-[min(92px,9dvh)] w-full rounded-[18px] border border-[#FDAFC7] bg-[#FDAFC7] text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.45)] transition hover:bg-[#f99fbe]"
         >
           완성하기
         </button>

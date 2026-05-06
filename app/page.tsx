@@ -7,8 +7,8 @@ export default function Home() {
   const router = useRouter();
 
   return (
-    <div className="h-[100dvh] overflow-hidden bg-[#FFFFF5] text-[#1b1b1b]">
-      <main className="mx-auto flex h-full w-full items-center justify-center overflow-hidden">
+    <div className="min-h-screen overflow-y-auto bg-[#FFFFF5] text-[#1b1b1b]">
+      <main className="mx-auto flex w-full items-start justify-center px-6 py-8">
         <section className="relative flex w-[min(38vw,60dvh)] aspect-[520/860] flex-col items-center bg-[#FFFFF5] [container-type:size]">
           <div className="mt-[39.5cqh] flex flex-col items-center">
             <h1

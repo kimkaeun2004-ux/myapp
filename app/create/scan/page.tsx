@@ -83,7 +83,7 @@ export default function ScanPage() {
         </h1>
 
         <section className="mt-10 rounded-[18px] bg-[#ecece8] p-5">
-          <div className="relative h-[430px] w-full overflow-hidden rounded-[14px] bg-[#d9d9d5]">
+          <div className="relative h-[min(430px,40dvh)] w-full overflow-hidden rounded-[14px] bg-[#d9d9d5]">
             <video
               ref={videoRef}
               autoPlay
@@ -102,7 +102,7 @@ export default function ScanPage() {
             type="button"
             onClick={handleScanButtonClick}
             disabled={isScanning}
-            className="mx-auto mt-6 block h-[92px] w-[190px] rounded-[18px] bg-[#FDAFC7] text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.2)] transition hover:bg-[#f99fbe] disabled:cursor-not-allowed disabled:opacity-70"
+            className="mx-auto mt-6 block h-[min(92px,9dvh)] w-[190px] rounded-[18px] bg-[#FDAFC7] text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.2)] transition hover:bg-[#f99fbe] disabled:cursor-not-allowed disabled:opacity-70"
           >
             {isScanning ? "인식중..." : "티켓 인식하기"}
           </button>
