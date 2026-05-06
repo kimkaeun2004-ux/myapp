@@ -32,14 +32,14 @@ function CompleteContent() {
       backImage: backImage ?? "",
     };
     try {
-      const rawList = window.localStorage.getItem("yeounTickets");
+      const rawList = window.sessionStorage.getItem("yeounTickets");
       const prevList = rawList ? (JSON.parse(rawList) as typeof payload[]) : [];
       const nextList = [payload, ...prevList].slice(0, 50);
-      window.localStorage.setItem("yeounTickets", JSON.stringify(nextList));
+      window.sessionStorage.setItem("yeounTickets", JSON.stringify(nextList));
     } catch {
-      window.localStorage.setItem("yeounTickets", JSON.stringify([payload]));
+      window.sessionStorage.setItem("yeounTickets", JSON.stringify([payload]));
     }
-    window.localStorage.setItem("yeounTicket", JSON.stringify(payload));
+    window.sessionStorage.setItem("yeounTicket", JSON.stringify(payload));
     router.push("/main");
   };
 

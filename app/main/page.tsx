@@ -1,10 +1,13 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { gradientFromEmotionParam } from "../create/_shared/ticket-gradient";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
 
 type StoredTicket = {
+  id?: number;
   emotions: string;
   quote: string;
   backImage: string;
@@ -23,30 +26,69 @@ function MainContent() {
   const searchParams = useSearchParams();
   const queryName = searchParams.get("userName");
   const userName = queryName === "가은" ? "가은" : "게스트";
-  const [ticket, setTicket] = useState<StoredTicket | null>(null);
+  const [tickets, setTickets] = useState<StoredTicket[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [showBack, setShowBack] = useState(false);
+  const isDraggingRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const isGuestLoggedIn = window.sessionStorage.getItem("yeounGuestLoggedIn") === "true";
+    if (!isGuestLoggedIn) {
+      router.replace("/");
+      return;
+    }
+  }, [router]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const parseTicket = (item: Partial<StoredTicket>, idx: number): StoredTicket => ({
+      id: item.id ?? Date.now() - idx,
+      emotions: item.emotions ?? "",
+      quote: item.quote ?? "",
+      backImage: item.backImage ?? "",
+    });
+
     try {
-      const raw = window.localStorage.getItem("yeounTicket");
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as Partial<StoredTicket>;
-      if (parsed && (parsed.emotions || parsed.quote || parsed.backImage)) {
-        setTicket({
-          emotions: parsed.emotions ?? "",
-          quote: parsed.quote ?? "",
-          backImage: parsed.backImage ?? "",
-        });
+      const rawList = window.sessionStorage.getItem("yeounTickets");
+      let list: StoredTicket[] = [];
+
+      if (rawList) {
+        const parsedList = JSON.parse(rawList) as Partial<StoredTicket>[];
+        list = parsedList
+          .filter((item) => item && (item.emotions || item.quote || item.backImage))
+          .map(parseTicket);
       }
+
+      const rawSingle = window.sessionStorage.getItem("yeounTicket");
+      if (rawSingle) {
+        const parsedSingle = JSON.parse(rawSingle) as Partial<StoredTicket>;
+        if (parsedSingle && (parsedSingle.emotions || parsedSingle.quote || parsedSingle.backImage)) {
+          const single = parseTicket(parsedSingle, 0);
+          const sameAsFirst =
+            list.length > 0 &&
+            list[0].emotions === single.emotions &&
+            list[0].quote === single.quote &&
+            list[0].backImage === single.backImage;
+
+          if (!sameAsFirst) {
+            list = [single, ...list];
+          }
+        }
+      }
+
+      setTickets(list);
+      window.sessionStorage.setItem("yeounTickets", JSON.stringify(list));
     } catch {
-      // ignore malformed localStorage
+      setTickets([]);
     }
   }, []);
 
-  const hasTicket = !!ticket;
-  const ticketBackground = ticket
-    ? gradientFromEmotionParam(ticket.emotions || null)
+  const currentTicket = tickets[activeIndex] ?? null;
+  const hasTicket = !!currentTicket;
+  const ticketBackground = currentTicket
+    ? gradientFromEmotionParam(currentTicket.emotions || null)
     : undefined;
 
   return (
@@ -73,41 +115,78 @@ function MainContent() {
           </button>
 
           {hasTicket ? (
-            <button
-              type="button"
-              onClick={() => {
-                if (ticket?.backImage) setShowBack((prev) => !prev);
-              }}
-              className={`mx-auto mt-[2.6cqh] flex h-[min(430px,40dvh)] min-h-[270px] w-[84.6cqw] flex-col items-center justify-center overflow-hidden rounded-[14px] border border-[#ece8e1] bg-white text-center shadow-[0_12px_24px_rgba(0,0,0,0.2)] ${
-                !showBack || !ticket?.backImage ? "px-[6cqw]" : ""
-              }`}
-              style={!showBack ? { backgroundImage: ticketBackground } : undefined}
-            >
-              {!showBack || !ticket?.backImage ? (
-                <div className="flex h-full w-full flex-col items-center justify-center">
-                  <p className="text-[2.7cqw] font-bold tracking-[0.01em]">
-                    2025 DOYOUNG ENCORE CONCERT
-                  </p>
-                  <p className="mt-[1.6cqh] text-[9.2cqw] font-black leading-none">YOURS</p>
-                  <p className="mt-[1.9cqh] text-[3.6cqw] font-semibold">25 - 10 - 09 Thu</p>
-                  <p className="mt-[1.3cqh] text-[3.8cqw] font-extrabold tracking-[0.02em]">
-                    DOYOUNG
-                  </p>
-                  {ticket.quote ? (
-                    <p className="mt-[2.1cqh] w-[86%] whitespace-pre-wrap break-words text-[3.6cqw] font-semibold leading-[1.35] tracking-[0.01em]">
-                      {ticket.quote}
-                    </p>
-                  ) : null}
-                </div>
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={ticket.backImage}
-                  alt="티켓 뒷면 이미지"
-                  className="h-full w-full rounded-[14px] object-cover"
-                />
-              )}
-            </button>
+            <div className="mx-auto mt-[2.6cqh] w-[84.6cqw] [touch-action:pan-y]">
+              <Swiper
+                slidesPerView={1}
+                spaceBetween={0}
+                speed={350}
+                simulateTouch
+                allowTouchMove
+                grabCursor
+                touchStartPreventDefault={false}
+                onSlideChange={(swiper) => {
+                  setActiveIndex(swiper.activeIndex);
+                  setShowBack(false);
+                }}
+                onTouchMove={() => {
+                  isDraggingRef.current = true;
+                }}
+                onTouchEnd={() => {
+                  window.setTimeout(() => {
+                    isDraggingRef.current = false;
+                  }, 60);
+                }}
+                onSliderMove={() => {
+                  isDraggingRef.current = true;
+                }}
+              >
+                {tickets.map((ticket, idx) => {
+                  const isBack = showBack && idx === activeIndex;
+                  const bg = gradientFromEmotionParam(ticket.emotions || null);
+                  return (
+                    <SwiperSlide key={ticket.id ?? idx}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isDraggingRef.current) return;
+                          if (idx !== activeIndex) return;
+                          if (ticket.backImage) setShowBack((prev) => !prev);
+                        }}
+                        className={`flex h-[min(430px,40dvh)] min-h-[270px] w-full flex-col items-center justify-center overflow-hidden rounded-[14px] border border-[#ece8e1] bg-white text-center shadow-[0_12px_24px_rgba(0,0,0,0.2)] ${
+                          !isBack || !ticket.backImage ? "px-[6cqw]" : ""
+                        }`}
+                        style={!isBack ? { backgroundImage: bg } : undefined}
+                      >
+                        {!isBack || !ticket.backImage ? (
+                          <div className="flex h-full w-full flex-col items-center justify-center">
+                            <p className="text-[2.7cqw] font-bold tracking-[0.01em]">
+                              2025 DOYOUNG ENCORE CONCERT
+                            </p>
+                            <p className="mt-[1.6cqh] text-[9.2cqw] font-black leading-none">YOURS</p>
+                            <p className="mt-[1.9cqh] text-[3.6cqw] font-semibold">25 - 10 - 09 Thu</p>
+                            <p className="mt-[1.3cqh] text-[3.8cqw] font-extrabold tracking-[0.02em]">
+                              DOYOUNG
+                            </p>
+                            {ticket.quote ? (
+                              <p className="mt-[2.1cqh] w-[86%] whitespace-pre-wrap break-words text-[3.6cqw] font-semibold leading-[1.35] tracking-[0.01em]">
+                                {ticket.quote}
+                              </p>
+                            ) : null}
+                          </div>
+                        ) : (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={ticket.backImage}
+                            alt="티켓 뒷면 이미지"
+                            className="h-full w-full rounded-[14px] object-cover"
+                          />
+                        )}
+                      </button>
+                    </SwiperSlide>
+                  );
+                })}
+              </Swiper>
+            </div>
           ) : (
             <section className="mx-auto mt-[2.6cqh] flex h-[min(430px,40dvh)] min-h-[270px] w-[84.6cqw] items-center justify-center rounded-[14px] border border-[#FDAFC7] bg-[#ffffff] px-[5.1cqw] text-center shadow-[0_12px_24px_rgba(0,0,0,0.08)]">
               <p className="text-[5cqw] font-bold tracking-[-0.02em] text-[#3c3c3c]">
