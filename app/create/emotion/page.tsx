@@ -42,16 +42,16 @@ export default function EmotionPage() {
           ×
         </button>
 
-        <section className="relative mx-auto mt-7 flex h-[27cqh] w-[97%] flex-col items-center justify-center rounded-[50%] border border-[#f1c9d8] bg-white px-8 text-center">
-          <span className="absolute -bottom-[2.3cqh] left-1/2 h-[4.6cqh] w-[4.6cqh] -translate-x-1/2 rotate-45 border-b border-r border-[#f1c9d8] bg-white" />
-          <h1 className="text-[6.8cqw] font-extrabold leading-[1.23] tracking-[-0.03em]">
+        <section className="relative mx-auto mt-10 flex h-[24cqh] w-[97%] flex-col items-center justify-center rounded-[50%] border border-[#f1c9d8] bg-white px-8 text-center">
+          <span className="absolute -bottom-[2.1cqh] left-1/2 h-[4.2cqh] w-[4.2cqh] -translate-x-1/2 rotate-45 border-b border-r border-[#f1c9d8] bg-white" />
+          <h1 className="text-[5cqw] font-extrabold leading-[1.28] tracking-[-0.03em]">
             오늘 공연은
             <br />
             어떤 느낌이었나요?
           </h1>
         </section>
 
-        <p className="mt-9 text-center text-[4.7cqw] font-bold leading-[1.35] tracking-[-0.02em]">
+        <p className="mt-9 text-center text-[4.4cqw] font-semibold leading-[1.35] tracking-[-0.02em]">
           오늘 공연을 보고 느낀 감정을 선택해 보세요!
           <br />
           (최대 3개까지만 선택이 가능합니다.)
@@ -65,7 +65,7 @@ export default function EmotionPage() {
                 key={chip.label}
                 type="button"
                 onClick={() => toggleChip(chip.label)}
-                className="aspect-square w-full rounded-[1.8cqw] border border-[#e9e3dd] text-[4.6cqw] font-bold text-[#202020] shadow-[0_8px_14px_rgba(0,0,0,0.15)] transition active:scale-[0.98]"
+                className="aspect-square w-full rounded-[1.8cqw] border border-[#e9e3dd] text-[4.4cqw] font-bold text-[#202020] shadow-[0_8px_14px_rgba(0,0,0,0.15)] transition active:scale-[0.98]"
                 style={{
                   backgroundColor: chip.color,
                   outline: isSelected ? "3px solid #FDAFC7" : "none",
@@ -78,7 +78,7 @@ export default function EmotionPage() {
           })}
         </section>
 
-        <div className="mx-auto mt-10 flex w-full items-center justify-between gap-4">
+        <div className="mx-auto mt-8 flex w-full items-center justify-between gap-4">
           <button
             type="button"
             onClick={() => router.push("/create/result")}

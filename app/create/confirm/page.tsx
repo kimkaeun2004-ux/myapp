@@ -43,7 +43,7 @@ export default function ConfirmPage() {
 
         {!isCompleted ? (
           <>
-            <h1 className="mt-12 text-center text-[5cqw] font-extrabold tracking-[-0.03em]">
+            <h1 className="mt-10 text-center text-[5cqw] font-extrabold tracking-[-0.03em]">
               티켓 정보를 확인해 주세요
             </h1>
 
@@ -107,7 +107,7 @@ export default function ConfirmPage() {
           </>
         ) : (
           <>
-            <h2 className="mt-12 text-center text-[5cqw] font-extrabold tracking-[-0.03em]">
+            <h2 className="mt-10 text-center text-[5cqw] font-extrabold tracking-[-0.03em]">
               수정 완료!
             </h2>
 
