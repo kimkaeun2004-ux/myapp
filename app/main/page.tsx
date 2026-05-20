@@ -1,17 +1,13 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { resolveAuthDisplayName, ensureLoggedIn } from "@/lib/auth/session";
+import { loadUserProfile } from "@/lib/profile/storage";
+import { loadStoredTickets, type StoredTicket } from "@/lib/tickets/storage";
 import { gradientFromEmotionParam } from "../create/_shared/ticket-gradient";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
-
-type StoredTicket = {
-  id?: number;
-  emotions: string;
-  quote: string;
-  backImage: string;
-};
 
 export default function MainPage() {
   return (
@@ -23,9 +19,8 @@ export default function MainPage() {
 
 function MainContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const queryName = searchParams.get("userName");
-  const userName = queryName === "가은" ? "가은" : "게스트";
+  const [userName, setUserName] = useState("게스트");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [tickets, setTickets] = useState<StoredTicket[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [showBack, setShowBack] = useState(false);
@@ -33,57 +28,20 @@ function MainContent() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const isGuestLoggedIn = window.sessionStorage.getItem("yeounGuestLoggedIn") === "true";
-    if (!isGuestLoggedIn) {
-      router.replace("/");
-      return;
-    }
+
+    const init = async () => {
+      const ok = await ensureLoggedIn(router.replace);
+      if (!ok) return;
+
+      const fallback = await resolveAuthDisplayName();
+      const profile = loadUserProfile(fallback);
+      setUserName(profile.displayName);
+      setAvatarUrl(profile.avatarUrl || null);
+      setTickets(loadStoredTickets());
+    };
+
+    void init();
   }, [router]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const parseTicket = (item: Partial<StoredTicket>, idx: number): StoredTicket => ({
-      id: item.id ?? Date.now() - idx,
-      emotions: item.emotions ?? "",
-      quote: item.quote ?? "",
-      backImage: item.backImage ?? "",
-    });
-
-    try {
-      const rawList = window.sessionStorage.getItem("yeounTickets");
-      let list: StoredTicket[] = [];
-
-      if (rawList) {
-        const parsedList = JSON.parse(rawList) as Partial<StoredTicket>[];
-        list = parsedList
-          .filter((item) => item && (item.emotions || item.quote || item.backImage))
-          .map(parseTicket);
-      }
-
-      const rawSingle = window.sessionStorage.getItem("yeounTicket");
-      if (rawSingle) {
-        const parsedSingle = JSON.parse(rawSingle) as Partial<StoredTicket>;
-        if (parsedSingle && (parsedSingle.emotions || parsedSingle.quote || parsedSingle.backImage)) {
-          const single = parseTicket(parsedSingle, 0);
-          const sameAsFirst =
-            list.length > 0 &&
-            list[0].emotions === single.emotions &&
-            list[0].quote === single.quote &&
-            list[0].backImage === single.backImage;
-
-          if (!sameAsFirst) {
-            list = [single, ...list];
-          }
-        }
-      }
-
-      setTickets(list);
-      window.sessionStorage.setItem("yeounTickets", JSON.stringify(list));
-    } catch {
-      setTickets([]);
-    }
-  }, []);
 
   const currentTicket = tickets[activeIndex] ?? null;
   const hasTicket = !!currentTicket;
@@ -100,12 +58,21 @@ function MainContent() {
         <section className="relative flex w-[min(38vw,60dvh)] aspect-[520/860] min-w-[320px] max-w-[420px] flex-col bg-[#FFFFF5] [container-type:size]">
           <h1 className="mt-[5.4cqh] text-center text-[4cqw] font-bold">홈</h1>
 
-          <div className="mt-[5.2cqh] flex items-center gap-[2.1cqw] px-[6.2cqw]">
-            <div className="flex h-[8.8cqw] w-[8.8cqw] items-center justify-center rounded-full bg-[#ece9df] text-[4.8cqw] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]">
-              👤
+          <button
+            type="button"
+            onClick={() => router.push("/profile")}
+            className="mt-[5.2cqh] flex w-full items-center gap-[2.1cqw] px-[6.2cqw] text-left transition hover:opacity-90"
+          >
+            <div className="flex h-[22cqw] w-[22cqw] shrink-0 items-center justify-center overflow-hidden rounded-[2.2cqw] bg-[#ece9df] text-[10cqw] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]">
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <span>🧸</span>
+              )}
             </div>
             <p className="text-[4.8cqw] font-bold tracking-[-0.02em]">{userName} 님</p>
-          </div>
+          </button>
 
           <button
             type="button"
@@ -115,7 +82,7 @@ function MainContent() {
           </button>
 
           {hasTicket ? (
-            <div className="mx-auto mt-[2.6cqh] w-[84.6cqw] [touch-action:pan-y]">
+            <div className="mx-auto mt-[3.2cqh] w-[84.6cqw] [touch-action:pan-y]">
               <Swiper
                 slidesPerView={1}
                 spaceBetween={0}
@@ -188,7 +155,7 @@ function MainContent() {
               </Swiper>
             </div>
           ) : (
-            <section className="mx-auto mt-[2.6cqh] flex h-[min(430px,40dvh)] min-h-[270px] w-[84.6cqw] items-center justify-center rounded-[14px] border border-[#FDAFC7] bg-[#ffffff] px-[5.1cqw] text-center shadow-[0_12px_24px_rgba(0,0,0,0.08)]">
+            <section className="mx-auto mt-[3.2cqh] flex h-[min(430px,40dvh)] min-h-[270px] w-[84.6cqw] items-center justify-center rounded-[14px] border border-[#FDAFC7] bg-[#ffffff] px-[5.1cqw] text-center shadow-[0_12px_24px_rgba(0,0,0,0.08)]">
               <p className="text-[5cqw] font-bold tracking-[-0.02em] text-[#3c3c3c]">
                 첫 여운을 기록해보세요!
               </p>
@@ -198,7 +165,7 @@ function MainContent() {
           <button
             type="button"
             onClick={() => router.push("/create/scan")}
-            className="mx-auto mt-[2.4cqh] h-[min(100px,11dvh)] min-h-[60px] w-[84.6cqw] rounded-[2.2cqw] border border-[#FDAFC7] bg-[#FDAFC7] text-[4.8cqw] font-extrabold tracking-[-0.02em] shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition hover:bg-[#f99fbe] active:scale-[0.99]"
+            className="mx-auto mt-[3.2cqh] h-[min(100px,11dvh)] min-h-[60px] w-[84.6cqw] rounded-[2.2cqw] border border-[#FDAFC7] bg-[#FDAFC7] text-[4.8cqw] font-extrabold tracking-[-0.02em] shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition hover:bg-[#f99fbe] active:scale-[0.99]"
           >
             새로운 여운 기록하기
           </button>
