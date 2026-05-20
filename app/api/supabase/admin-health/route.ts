@@ -1,19 +1,32 @@
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
-export async function GET() {
-  const supabase = createSupabaseAdmin();
-  const { error } = await supabase.auth.getSession();
+export const dynamic = "force-dynamic";
 
-  if (error) {
+export async function GET() {
+  try {
+    const supabase = createSupabaseAdmin();
+    const { error } = await supabase.auth.getSession();
+
+    if (error) {
+      return NextResponse.json(
+        { connected: false, error: error.message },
+        { status: 503 }
+      );
+    }
+
+    return NextResponse.json({
+      connected: true,
+      message: "Supabase service role client is connected.",
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json(
-      { connected: false, error: error.message },
+      {
+        connected: false,
+        error: message,
+      },
       { status: 503 }
     );
   }
-
-  return NextResponse.json({
-    connected: true,
-    message: "Supabase service role client is connected.",
-  });
 }

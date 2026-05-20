@@ -1,6 +1,8 @@
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 function isAlreadyRegistered(message: string) {
   const lower = message.toLowerCase();
   return (
