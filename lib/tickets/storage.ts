@@ -3,6 +3,11 @@ export type StoredTicket = {
   emotions: string;
   quote: string;
   backImage: string;
+  concertName?: string;
+  artist?: string;
+  date?: string;
+  day?: string;
+  venue?: string;
 };
 
 function parseTicket(item: Partial<StoredTicket>, idx: number): StoredTicket {
@@ -11,6 +16,11 @@ function parseTicket(item: Partial<StoredTicket>, idx: number): StoredTicket {
     emotions: item.emotions ?? "",
     quote: item.quote ?? "",
     backImage: item.backImage ?? "",
+    concertName: item.concertName,
+    artist: item.artist,
+    date: item.date,
+    day: item.day,
+    venue: item.venue,
   };
 }
 
@@ -65,6 +75,7 @@ export function formatTicketDateFromId(id?: number) {
 }
 
 export function ticketGridTitle(ticket: StoredTicket) {
+  if (ticket.concertName?.trim()) return ticket.concertName.trim();
   const emotions = ticket.emotions
     .split(",")
     .map((e) => e.trim())
@@ -75,6 +86,10 @@ export function ticketGridTitle(ticket: StoredTicket) {
 }
 
 export function ticketGridHeadline(ticket: StoredTicket) {
+  if (ticket.artist?.trim()) {
+    const name = ticket.artist.trim();
+    return name.length <= 10 ? name : `${name.slice(0, 10)}…`;
+  }
   if (ticket.quote) {
     const line = ticket.quote.split("\n")[0]?.trim() ?? "";
     if (line.length <= 10) return line;

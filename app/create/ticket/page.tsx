@@ -1,5 +1,7 @@
 "use client";
 
+import { TicketFrontContent } from "../_shared/TicketFrontContent";
+import { useTicketRegistration } from "@/lib/ticket/use-ticket-registration";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { buildGradient, EMOTION_COLORS } from "../_shared/ticket-gradient";
@@ -15,6 +17,7 @@ export default function TicketPage() {
 function TicketContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const registration = useTicketRegistration();
   const [draftQuote, setDraftQuote] = useState("");
   const emotions = (searchParams.get("emotions") ?? "")
     .split(",")
@@ -64,14 +67,7 @@ function TicketContent() {
           className="mx-auto mt-10 flex h-[min(430px,40dvh)] w-full flex-col items-center justify-center rounded-[14px] border border-[#ece8e1] px-[6cqw] text-center shadow-[0_8px_20px_rgba(0,0,0,0.12)]"
           style={{ backgroundImage: ticketBackground }}
         >
-          <p className="text-[2.7cqw] font-bold tracking-[0.01em]">
-            2025 DOYOUNG ENCORE CONCERT
-          </p>
-          <p className="mt-[1.6cqh] text-[9.2cqw] font-black leading-none">YOURS</p>
-          <p className="mt-[1.9cqh] text-[3.6cqw] font-semibold">25 - 10 - 09 Thu</p>
-          <p className="mt-[1.3cqh] text-[3.8cqw] font-extrabold tracking-[0.02em]">
-            DOYOUNG
-          </p>
+          <TicketFrontContent ticket={registration} />
 
           <div className="mt-[26px] flex h-[155px] w-[86%] flex-col items-center justify-center gap-3 rounded-[10px] bg-[rgba(255,255,255,0.5)] px-4 py-3 shadow-[0_4px_10px_rgba(0,0,0,0.12)]">
             <textarea

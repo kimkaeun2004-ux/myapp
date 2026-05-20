@@ -127,13 +127,19 @@ function MainContent() {
                         {!isBack || !ticket.backImage ? (
                           <div className="flex h-full w-full flex-col items-center justify-center">
                             <p className="text-[2.7cqw] font-bold tracking-[0.01em]">
-                              2025 DOYOUNG ENCORE CONCERT
+                              {ticket.concertName || "CONCERT"}
                             </p>
-                            <p className="mt-[1.6cqh] text-[9.2cqw] font-black leading-none">YOURS</p>
-                            <p className="mt-[1.9cqh] text-[3.6cqw] font-semibold">25 - 10 - 09 Thu</p>
-                            <p className="mt-[1.3cqh] text-[3.8cqw] font-extrabold tracking-[0.02em]">
-                              DOYOUNG
+                            <p className="mt-[1.6cqh] text-[9.2cqw] font-black leading-none">
+                              {ticket.artist || "ARTIST"}
                             </p>
+                            {[ticket.date, ticket.day].filter(Boolean).length > 0 ? (
+                              <p className="mt-[1.9cqh] text-[3.6cqw] font-semibold">
+                                {[ticket.date, ticket.day].filter(Boolean).join(" · ")}
+                              </p>
+                            ) : null}
+                            {ticket.venue ? (
+                              <p className="mt-[1.3cqh] text-[3.2cqw] font-semibold">{ticket.venue}</p>
+                            ) : null}
                             {ticket.quote ? (
                               <p className="mt-[2.1cqh] w-[86%] whitespace-pre-wrap break-words text-[3.6cqw] font-semibold leading-[1.35] tracking-[0.01em]">
                                 {ticket.quote}

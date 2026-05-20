@@ -1,22 +1,23 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { beginNewTicketCreation, saveTicketDraft } from "@/lib/ticket/draft-storage";
+import { captureVideoFrame, recognizeTicketFromImage } from "@/lib/ticket/recognize";
 import { useRouter } from "next/navigation";
-// OCR is intentionally deferred to week 10.
+import { useEffect, useRef, useState } from "react";
 
 export default function ScanPage() {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
+    beginNewTicketCreation();
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-      }
+      streamRef.current?.getTracks().forEach((track) => track.stop());
     };
   }, []);
 
@@ -35,24 +36,32 @@ export default function ScanPage() {
       }
       setIsCameraReady(true);
     } catch {
-      setErrorMessage("카메라 권한을 허용해 주세요.");
+      setErrorMessage("카메라 권한을 허용해 주세요. 또는 아래에서 사진을 선택해 주세요.");
     }
   };
 
-  const scanTicket = async () => {
-    if (!videoRef.current) return;
-
+  const runRecognition = async (imageDataUrl: string) => {
     setIsScanning(true);
     setErrorMessage("");
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 700));
-      router.push("/create/result");
+      const draft = await recognizeTicketFromImage(imageDataUrl);
+      saveTicketDraft(draft);
+      router.push("/create/confirm");
     } catch {
-      setErrorMessage("인식에 실패했습니다. 티켓을 다시 비춰주세요.");
+      setErrorMessage("인식에 실패했습니다. 티켓을 다시 비추거나 사진을 선택해 주세요.");
     } finally {
       setIsScanning(false);
     }
+  };
+
+  const scanFromCamera = async () => {
+    if (!videoRef.current || videoRef.current.readyState < 2) {
+      setErrorMessage("카메라가 준비되지 않았습니다.");
+      return;
+    }
+    const imageDataUrl = captureVideoFrame(videoRef.current);
+    await runRecognition(imageDataUrl);
   };
 
   const handleScanButtonClick = async () => {
@@ -60,7 +69,21 @@ export default function ScanPage() {
       await startCamera();
       return;
     }
-    await scanTicket();
+    await scanFromCamera();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        void runRecognition(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
   };
 
   return (
@@ -81,6 +104,9 @@ export default function ScanPage() {
         <h1 className="mt-12 text-center text-[5cqw] font-extrabold tracking-[-0.03em]">
           티켓을 인식해보세요.
         </h1>
+        <p className="mt-3 text-center text-[3.2cqw] font-medium text-[#7a7a76]">
+          날짜와 공연장은 자동으로 채워져요.
+        </p>
 
         <section className="mt-10 rounded-[18px] bg-[#ecece8] p-5">
           <div className="relative h-[min(430px,40dvh)] w-full overflow-hidden rounded-[14px] bg-[#d9d9d5]">
@@ -104,11 +130,29 @@ export default function ScanPage() {
             disabled={isScanning}
             className="mx-auto mt-6 block h-[min(92px,9dvh)] w-[190px] rounded-[18px] bg-[#FDAFC7] text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.2)] transition hover:bg-[#f99fbe] disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {isScanning ? "인식중..." : "티켓 인식하기"}
+            {isScanning ? "인식중..." : isCameraReady ? "티켓 인식하기" : "카메라 켜기"}
           </button>
 
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isScanning}
+            className="mx-auto mt-3 block text-[3.4cqw] font-semibold text-[#b14d70] underline-offset-2 hover:underline disabled:opacity-60"
+          >
+            갤러리에서 사진 선택
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+
           {errorMessage ? (
-            <p className="mt-4 text-center text-[3.8cqw] font-semibold text-[#b14d70]">{errorMessage}</p>
+            <p className="mt-4 text-center text-[3.8cqw] font-semibold text-[#b14d70]">
+              {errorMessage}
+            </p>
           ) : null}
         </section>
       </main>
