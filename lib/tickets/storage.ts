@@ -26,6 +26,12 @@ function parseTicket(item: Partial<StoredTicket>, idx: number): StoredTicket {
   };
 }
 
+export function writeTicketsCache(list: StoredTicket[]) {
+  if (typeof window === "undefined") return;
+  writeSessionTicketList(list);
+  if (list[0]) writeSessionTicket(list[0]);
+}
+
 export function loadStoredTickets(): StoredTicket[] {
   if (typeof window === "undefined") return [];
 

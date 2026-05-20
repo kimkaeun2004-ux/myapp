@@ -3,8 +3,9 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { resolveAuthDisplayName, ensureLoggedIn } from "@/lib/auth/session";
-import { loadUserProfile } from "@/lib/profile/storage";
-import { loadStoredTickets, type StoredTicket } from "@/lib/tickets/storage";
+import { loadUserProfile } from "@/lib/profile/user-profile";
+import { loadUserTickets } from "@/lib/tickets/user-tickets";
+import type { StoredTicket } from "@/lib/tickets/storage";
 import {
   YEOUN_AVATAR,
   YEOUN_BLOCK_GAP,
@@ -45,10 +46,10 @@ function MainContent() {
       if (!ok) return;
 
       const fallback = await resolveAuthDisplayName();
-      const profile = loadUserProfile(fallback);
+      const profile = await loadUserProfile(fallback);
       setUserName(profile.displayName);
       setAvatarUrl(profile.avatarUrl || null);
-      setTickets(loadStoredTickets());
+      setTickets(await loadUserTickets());
     };
 
     void init();

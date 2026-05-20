@@ -1,18 +1,18 @@
 "use client";
 
 import { ensureLoggedIn, resolveAuthDisplayName } from "@/lib/auth/session";
+import { DEFAULT_AVATAR } from "@/lib/profile/storage";
 import {
-  DEFAULT_AVATAR,
   loadUserProfile,
-  saveUserProfile,
-} from "@/lib/profile/storage";
+  saveUserProfileForAccount,
+} from "@/lib/profile/user-profile";
 import {
   formatTicketDateFromId,
-  loadStoredTickets,
   ticketGridHeadline,
   ticketGridTitle,
   type StoredTicket,
 } from "@/lib/tickets/storage";
+import { loadUserTickets } from "@/lib/tickets/user-tickets";
 import { gradientFromEmotionParam } from "@/app/create/_shared/ticket-gradient";
 import {
   YEOUN_AVATAR,
@@ -44,12 +44,12 @@ export default function ProfilePage() {
       if (!ok) return;
 
       const fallback = await resolveAuthDisplayName();
-      const profile = loadUserProfile(fallback);
+      const profile = await loadUserProfile(fallback);
       setDisplayName(profile.displayName);
       setDraftName(profile.displayName);
       setAvatarUrl(profile.avatarUrl);
       setDraftAvatarUrl(profile.avatarUrl);
-      setTickets(loadStoredTickets());
+      setTickets(await loadUserTickets());
     };
 
     void init();
@@ -68,7 +68,7 @@ export default function ProfilePage() {
       displayName: nextName,
       avatarUrl: draftAvatarUrl,
     };
-    saveUserProfile(nextProfile);
+    void saveUserProfileForAccount(nextProfile);
     setDisplayName(nextName);
     setAvatarUrl(draftAvatarUrl);
     setIsEditing(false);

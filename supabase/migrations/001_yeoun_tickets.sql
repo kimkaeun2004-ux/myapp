@@ -2,7 +2,7 @@
 create table if not exists public.yeoun_tickets (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
-  emotion text not null default '',
+  emotions text not null default '',
   concert_name text,
   artist text,
   quote text,

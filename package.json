@@ -6,7 +6,8 @@
     "dev": "bash scripts/dev.sh",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:migrate": "node scripts/run-supabase-migrations.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
@@ -24,6 +25,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "pg": "^8.21.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

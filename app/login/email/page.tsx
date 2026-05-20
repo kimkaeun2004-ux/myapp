@@ -1,6 +1,8 @@
 "use client";
 
 import { displayNameFromEmail, signInOrSignUpWithEmail } from "@/lib/auth/email";
+import { ensureRemoteProfile } from "@/lib/profile/user-profile";
+import { syncLocalTicketsToSupabase } from "@/lib/tickets/supabase-tickets";
 import {
   YEOUN_BTN,
   YEOUN_CONTENT_W,
@@ -53,11 +55,16 @@ export default function EmailLoginPage() {
       if (typeof window !== "undefined") {
         window.sessionStorage.removeItem("yeounGuestLoggedIn");
         const userEmail = session.user.email ?? email.trim();
+        const displayName = displayNameFromEmail(userEmail);
         window.sessionStorage.setItem("yeounUserEmail", userEmail);
-        window.sessionStorage.setItem(
-          "yeounUserName",
-          displayNameFromEmail(userEmail)
-        );
+        window.sessionStorage.setItem("yeounUserName", displayName);
+      }
+
+      try {
+        await syncLocalTicketsToSupabase();
+        await ensureRemoteProfile(displayNameFromEmail(session.user.email ?? email));
+      } catch {
+        // Supabase 미설정·오프라인 시 로컬만 사용
       }
 
       router.push("/main");

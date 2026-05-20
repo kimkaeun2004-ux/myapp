@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ensureLoggedIn, resolveAuthDisplayName } from "@/lib/auth/session";
-import { loadUserProfile } from "@/lib/profile/storage";
+import { loadUserProfile } from "@/lib/profile/user-profile";
 import { fetchReportTickets } from "@/lib/tickets/supabase-tickets";
 import {
   computeEmotionReport,
@@ -44,7 +44,7 @@ function EmotionReportContent() {
       if (!ok) return;
 
       const fallback = await resolveAuthDisplayName();
-      const profile = loadUserProfile(fallback);
+      const profile = await loadUserProfile(fallback);
       setDisplayName(profile.displayName);
 
       try {

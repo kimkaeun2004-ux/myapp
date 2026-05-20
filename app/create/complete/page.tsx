@@ -75,6 +75,7 @@ function CompleteContent() {
         venue: reg.venue,
         date: reg.date,
         day: reg.day,
+        backImage: backImage ?? "",
       });
     } catch {
       // Supabase 저장은 베스트 에포트.
