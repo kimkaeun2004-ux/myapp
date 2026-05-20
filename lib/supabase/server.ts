@@ -37,12 +37,13 @@ export async function createSupabaseServerClient() {
  * Use in Route Handlers, Server Actions, and Server Components only.
  */
 export function createSupabaseAdmin() {
-  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseUrl =
+    process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !serviceRoleKey) {
     throw new Error(
-      "Supabase server env is missing. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local."
+      "Supabase server env is missing. Set SUPABASE_SERVICE_ROLE_KEY (and SUPABASE_URL if different from NEXT_PUBLIC_SUPABASE_URL)."
     );
   }
 

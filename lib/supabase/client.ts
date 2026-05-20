@@ -7,7 +7,12 @@ export type SupabasePublicConfig = {
 };
 
 const MISSING_ENV_MESSAGE =
-  "Supabase env is missing. Set NEXT_PUBLIC_SUPABASE_PROJECT_ID, NEXT_PUBLIC_SUPABASE_URL (optional), and NEXT_PUBLIC_SUPABASE_ANON_KEY.";
+  "Supabase env is missing. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY (and optionally NEXT_PUBLIC_SUPABASE_PROJECT_ID).";
+
+function projectIdFromSupabaseUrl(url: string): string | null {
+  const match = url.match(/https:\/\/([a-z0-9-]+)\.supabase\.co\/?$/i);
+  return match?.[1] ?? null;
+}
 
 function getAnonKeyProjectRef(anonKey: string): string | null {
   try {
@@ -23,13 +28,23 @@ function getAnonKeyProjectRef(anonKey: string): string | null {
 
 /** 빌드 시점에는 throw 하지 않음 — Vercel 등 env 미설정 빌드 통과용 */
 export function readSupabaseConfig(): SupabasePublicConfig | null {
-  const projectId = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const supabaseUrl =
     process.env.NEXT_PUBLIC_SUPABASE_URL ??
-    (projectId ? `https://${projectId}.supabase.co` : undefined);
+    (process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID
+      ? `https://${process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID}.supabase.co`
+      : undefined);
 
-  if (!projectId || !supabaseUrl || !supabaseAnonKey) {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return null;
+  }
+
+  const projectId =
+    process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID ??
+    projectIdFromSupabaseUrl(supabaseUrl) ??
+    getAnonKeyProjectRef(supabaseAnonKey);
+
+  if (!projectId) {
     return null;
   }
 
