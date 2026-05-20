@@ -26,9 +26,20 @@ export function loadTicketDraft(): TicketRegistrationDraft {
   }
 }
 
+function toPersistedDraft(draft: TicketRegistrationDraft): TicketRegistrationDraft {
+  return {
+    concertName: draft.concertName,
+    artist: draft.artist,
+    date: draft.date,
+    day: draft.day,
+    venue: draft.venue,
+    rawOcrText: draft.rawOcrText,
+  };
+}
+
 export function saveTicketDraft(draft: TicketRegistrationDraft) {
   if (typeof window === "undefined") return;
-  window.sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  window.sessionStorage.setItem(DRAFT_KEY, JSON.stringify(toPersistedDraft(draft)));
 }
 
 export function clearTicketDraft() {

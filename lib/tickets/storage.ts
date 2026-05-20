@@ -1,3 +1,5 @@
+import { compressDataUrl } from "@/lib/image/compress-data-url";
+
 export type StoredTicket = {
   id?: number;
   emotions: string;
@@ -61,6 +63,54 @@ export function loadStoredTickets(): StoredTicket[] {
     return list;
   } catch {
     return [];
+  }
+}
+
+function writeSessionTicketList(list: StoredTicket[]) {
+  window.sessionStorage.setItem("yeounTickets", JSON.stringify(list));
+}
+
+function writeSessionTicket(ticket: StoredTicket) {
+  window.sessionStorage.setItem("yeounTicket", JSON.stringify(ticket));
+}
+
+export async function saveStoredTicket(
+  ticket: StoredTicket
+): Promise<{ ok: true } | { ok: false; reason: "storage" }> {
+  if (typeof window === "undefined") {
+    return { ok: false, reason: "storage" };
+  }
+
+  let backImage = ticket.backImage;
+  if (backImage.startsWith("data:image/")) {
+    backImage = await compressDataUrl(backImage, {
+      maxWidth: 1200,
+      maxHeight: 1200,
+      quality: 0.7,
+    });
+  }
+
+  const payload: StoredTicket = { ...ticket, backImage };
+
+  try {
+    const rawList = window.sessionStorage.getItem("yeounTickets");
+    const prevList = rawList ? (JSON.parse(rawList) as StoredTicket[]) : [];
+    const nextList = [payload, ...prevList].slice(0, 20);
+    writeSessionTicketList(nextList);
+    writeSessionTicket(payload);
+    return { ok: true };
+  } catch {
+    try {
+      const withoutBackImage: StoredTicket = { ...payload, backImage: "" };
+      const rawList = window.sessionStorage.getItem("yeounTickets");
+      const prevList = rawList ? (JSON.parse(rawList) as StoredTicket[]) : [];
+      const nextList = [withoutBackImage, ...prevList].slice(0, 20);
+      writeSessionTicketList(nextList);
+      writeSessionTicket(withoutBackImage);
+      return { ok: true };
+    } catch {
+      return { ok: false, reason: "storage" };
+    }
   }
 }
 

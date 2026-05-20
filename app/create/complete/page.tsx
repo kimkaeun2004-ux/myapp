@@ -1,6 +1,7 @@
 "use client";
 
-import { loadTicketDraft } from "@/lib/ticket/draft-storage";
+import { clearTicketDraft, loadTicketDraft } from "@/lib/ticket/draft-storage";
+import { saveStoredTicket } from "@/lib/tickets/storage";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { gradientFromEmotionParam } from "../_shared/ticket-gradient";
@@ -11,6 +12,8 @@ function CompleteContent() {
   const [showBack, setShowBack] = useState(false);
   const [backImageDraft, setBackImageDraft] = useState("");
   const [registration, setRegistration] = useState(loadTicketDraft());
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   const emotionsParam = searchParams.get("emotions");
   const quote = searchParams.get("quote")?.trim() ?? "";
@@ -26,10 +29,14 @@ function CompleteContent() {
     setRegistration(loadTicketDraft());
   }, []);
 
-  const handleSave = () => {
-    if (typeof window === "undefined") return;
+  const handleSave = async () => {
+    if (typeof window === "undefined" || isSaving) return;
+
+    setIsSaving(true);
+    setSaveError("");
+
     const reg = loadTicketDraft();
-    const payload = {
+    const result = await saveStoredTicket({
       id: Date.now(),
       emotions: emotionsParam ?? "",
       quote,
@@ -39,16 +46,17 @@ function CompleteContent() {
       date: reg.date,
       day: reg.day,
       venue: reg.venue,
-    };
-    try {
-      const rawList = window.sessionStorage.getItem("yeounTickets");
-      const prevList = rawList ? (JSON.parse(rawList) as typeof payload[]) : [];
-      const nextList = [payload, ...prevList].slice(0, 50);
-      window.sessionStorage.setItem("yeounTickets", JSON.stringify(nextList));
-    } catch {
-      window.sessionStorage.setItem("yeounTickets", JSON.stringify([payload]));
+    });
+
+    setIsSaving(false);
+
+    if (!result.ok) {
+      setSaveError("저장에 실패했습니다. 사진 크기를 줄이거나 브라우저 저장 공간을 확인해 주세요.");
+      return;
     }
-    window.sessionStorage.setItem("yeounTicket", JSON.stringify(payload));
+
+    clearTicketDraft();
+    window.sessionStorage.removeItem("yeounBackImageDraft");
     router.push("/main");
   };
 
@@ -123,18 +131,24 @@ function CompleteContent() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="h-[min(92px,9dvh)] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-white text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.16)] transition hover:bg-[#fff7fa]"
+            disabled={isSaving}
+            className="h-[min(92px,9dvh)] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-white text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.16)] transition hover:bg-[#fff7fa] disabled:opacity-60"
           >
             이전
           </button>
           <button
             type="button"
-            onClick={handleSave}
-            className="h-[min(92px,9dvh)] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-[#FDAFC7] text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.45)] transition hover:bg-[#f99fbe]"
+            onClick={() => void handleSave()}
+            disabled={isSaving}
+            className="h-[min(92px,9dvh)] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-[#FDAFC7] text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.45)] transition hover:bg-[#f99fbe] disabled:cursor-not-allowed disabled:opacity-70"
           >
-            저장하기
+            {isSaving ? "저장 중..." : "저장하기"}
           </button>
         </div>
+
+        {saveError ? (
+          <p className="mt-4 text-center text-[3.4cqw] font-semibold text-[#b14d70]">{saveError}</p>
+        ) : null}
       </main>
     </div>
   );
