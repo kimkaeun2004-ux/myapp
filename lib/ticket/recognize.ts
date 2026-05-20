@@ -1,4 +1,4 @@
-import { buildDraftFromOcrText } from "@/lib/ticket/parse-ocr";
+import { buildDraftFromOcr } from "@/lib/ticket/parse-ocr";
 import type { TicketRegistrationDraft } from "@/lib/ticket/types";
 
 export function captureVideoFrame(video: HTMLVideoElement): string {
@@ -13,33 +13,31 @@ export function captureVideoFrame(video: HTMLVideoElement): string {
   return canvas.toDataURL("image/jpeg", 0.9);
 }
 
-export async function recognizeTicketText(imageDataUrl: string): Promise<string> {
-  const { createWorker } = await import("tesseract.js");
+export async function recognizeTicketFromImage(
+  imageDataUrl: string
+): Promise<TicketRegistrationDraft> {
+  const { createWorker, PSM } = await import("tesseract.js");
   const worker = await createWorker("kor+eng", 1, {
     logger: () => {},
   });
 
   try {
+    await worker.setParameters({
+      tessedit_pageseg_mode: PSM.AUTO,
+    });
     const result = await worker.recognize(imageDataUrl);
-    return result.data.text ?? "";
+    const extracted = buildDraftFromOcr(result.data);
+
+    return {
+      concertName: extracted.concertName,
+      artist: "",
+      date: extracted.date,
+      day: extracted.day,
+      venue: extracted.venue,
+      rawOcrText: extracted.rawOcrText,
+      imageDataUrl,
+    };
   } finally {
     await worker.terminate();
   }
-}
-
-export async function recognizeTicketFromImage(
-  imageDataUrl: string
-): Promise<TicketRegistrationDraft> {
-  const rawText = await recognizeTicketText(imageDataUrl);
-  const extracted = buildDraftFromOcrText(rawText);
-
-  return {
-    concertName: "",
-    artist: "",
-    date: extracted.date,
-    day: extracted.day,
-    venue: extracted.venue,
-    rawOcrText: extracted.rawOcrText,
-    imageDataUrl,
-  };
 }

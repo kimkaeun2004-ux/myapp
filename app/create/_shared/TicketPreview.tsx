@@ -1,18 +1,27 @@
+import type { CSSProperties } from "react";
 import type { TicketRegistrationDraft } from "@/lib/ticket/types";
+import {
+  YEOUN_TICKET_CARD,
+  YEOUN_TICKET_CARD_INNER,
+  YEOUN_TICKET_SLOT,
+} from "@/lib/ui/yeoun-scale";
 import { TicketFrontContent } from "./TicketFrontContent";
 
 type TicketPreviewProps = {
   ticket: Pick<TicketRegistrationDraft, "concertName" | "artist" | "date" | "day" | "venue">;
   quote?: string;
   className?: string;
+  style?: CSSProperties;
 };
 
-export function TicketPreview({ ticket, quote, className = "" }: TicketPreviewProps) {
+export function TicketPreview({ ticket, quote, className = "", style }: TicketPreviewProps) {
   return (
-    <section
-      className={`mx-auto flex h-[min(430px,40dvh)] w-full flex-col items-center justify-center rounded-[14px] border border-[#ece8e1] bg-white px-[6cqw] text-center shadow-[0_8px_20px_rgba(0,0,0,0.12)] ${className}`}
-    >
-      <TicketFrontContent ticket={ticket} quote={quote} />
-    </section>
+    <div className={className ? `${YEOUN_TICKET_SLOT} ${className}` : YEOUN_TICKET_SLOT}>
+      <section className={YEOUN_TICKET_CARD} style={style}>
+        <div className={YEOUN_TICKET_CARD_INNER}>
+          <TicketFrontContent ticket={ticket} quote={quote} />
+        </div>
+      </section>
+    </div>
   );
 }

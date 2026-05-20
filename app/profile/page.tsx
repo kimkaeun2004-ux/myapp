@@ -14,13 +14,19 @@ import {
   type StoredTicket,
 } from "@/lib/tickets/storage";
 import { gradientFromEmotionParam } from "@/app/create/_shared/ticket-gradient";
+import {
+  YEOUN_AVATAR,
+  YEOUN_BLOCK_GAP,
+  YEOUN_BTN,
+  YEOUN_CONTENT_W,
+  YEOUN_SCREEN,
+  YEOUN_SHELL_SECTION,
+  YEOUN_TEXT,
+  YEOUN_TICKET,
+  yeounFont,
+} from "@/lib/ui/yeoun-scale";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-
-/** 메인 홈과 동일한 블록·버튼 스펙 */
-const BLOCK_GAP = "mt-[3.2cqh]";
-const MAIN_BTN =
-  "mx-auto flex h-[min(80px,9dvh)] min-h-[56px] w-[84.6cqw] items-center justify-center rounded-[2.2cqw] text-[4.8cqw] font-extrabold tracking-[-0.02em]";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -90,27 +96,24 @@ export default function ProfilePage() {
   const shownAvatar = isEditing ? draftAvatarUrl : avatarUrl;
 
   return (
-    <div
-      className="h-[100dvh] overflow-hidden bg-[#FFFFF5] text-[#131313]"
-      style={{ fontFamily: "Inter, sans-serif" }}
-    >
+    <div className={YEOUN_SCREEN} style={yeounFont}>
       <main className="mx-auto flex h-full w-full items-center justify-center overflow-hidden">
-        <section className="relative flex w-[min(38vw,60dvh)] aspect-[520/860] min-w-[320px] max-w-[420px] flex-col overflow-y-auto bg-[#FFFFF5] [container-type:size]">
+        <section className={`${YEOUN_SHELL_SECTION} overflow-y-auto`}>
           <button
             type="button"
             onClick={() => router.push("/main")}
-            className="mt-[5.4cqh] px-[6.2cqw] text-left text-[6.4cqw] font-semibold leading-none text-[#FDAFC7]"
+            className={`mt-[5.4cqh] px-[6.2cqw] text-left ${YEOUN_TEXT.back}`}
             aria-label="뒤로"
           >
             ‹
           </button>
 
-          <div className="mx-auto mt-[5.2cqh] flex w-[84.6cqw] items-center gap-[3cqw]">
+          <div className={`mx-auto mt-[5.2cqh] flex ${YEOUN_CONTENT_W} items-center gap-[3cqw]`}>
             <button
               type="button"
               onClick={handleAvatarPick}
               disabled={!isEditing}
-              className={`relative h-[22cqw] w-[22cqw] shrink-0 overflow-hidden rounded-[2.2cqw] bg-[#ece9df] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)] disabled:cursor-default ${
+              className={`relative ${YEOUN_AVATAR} disabled:cursor-default ${
                 isEditing ? "ring-2 ring-[#FDAFC7]" : ""
               }`}
             >
@@ -118,9 +121,7 @@ export default function ProfilePage() {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={shownAvatar} alt="프로필" className="h-full w-full object-cover" />
               ) : (
-                <span className="flex h-full w-full items-center justify-center text-[10cqw]">
-                  🧸
-                </span>
+                <span className="flex h-full w-full items-center justify-center">🧸</span>
               )}
             </button>
 
@@ -129,18 +130,18 @@ export default function ProfilePage() {
                 <input
                   value={draftName}
                   onChange={(e) => setDraftName(e.target.value)}
-                  className="w-full border-b border-[#FDAFC7] bg-transparent text-[4.8cqw] font-bold tracking-[-0.02em] outline-none"
+                  className={`w-full border-b border-[#FDAFC7] bg-transparent ${YEOUN_TEXT.title} outline-none`}
                   placeholder="이름"
                 />
               ) : (
-                <p className="text-[4.8cqw] font-bold tracking-[-0.02em]">{displayName} 님</p>
+                <p className={YEOUN_TEXT.title}>{displayName} 님</p>
               )}
             </div>
 
             <button
               type="button"
               onClick={handleEditToggle}
-              className="shrink-0 rounded-[2.2cqw] border border-[#FDAFC7] bg-white px-[3.6cqw] py-[1.8cqh] text-[3.2cqw] font-bold tracking-[-0.01em] text-[#FDAFC7] transition hover:bg-[#fff7fa] active:scale-[0.99]"
+              className={`shrink-0 rounded-[2cqw] border border-[#FDAFC7] bg-white px-[3cqw] py-[1.2cqh] ${YEOUN_TEXT.body} text-[#FDAFC7] transition hover:bg-[#fff7fa] active:scale-[0.99]`}
             >
               {isEditing ? "저장" : "프로필 편집"}
             </button>
@@ -155,30 +156,32 @@ export default function ProfilePage() {
           />
 
           <div
-            className={`${MAIN_BTN} ${BLOCK_GAP} border border-[#FDAFC7] bg-[#FDAFC7] text-[#131313]`}
+            className={`mx-auto ${YEOUN_BLOCK_GAP} ${YEOUN_BTN} ${YEOUN_CONTENT_W} border-[#FDAFC7] bg-[#FDAFC7] text-[#131313]`}
           >
             티켓 피드
           </div>
 
           {gridTickets.length > 0 ? (
-            <section className={`${BLOCK_GAP} mx-auto grid w-[84.6cqw] grid-cols-3 gap-[2.1cqw]`}>
+            <section
+              className={`${YEOUN_BLOCK_GAP} mx-auto grid ${YEOUN_CONTENT_W} grid-cols-3 gap-[2.1cqw]`}
+            >
               {gridTickets.map((ticket, idx) => (
                 <article
                   key={ticket.id ?? idx}
-                  className="flex aspect-square flex-col items-center justify-center overflow-hidden rounded-[2.2cqw] border border-[#ece8e1] px-[1.4cqw] py-[1.2cqh] text-center shadow-[0_8px_20px_rgba(0,0,0,0.1)]"
+                  className="flex aspect-square flex-col items-center justify-center overflow-hidden rounded-[2cqw] border border-[#ece8e1] px-[1.4cqw] py-[1.2cqh] text-center shadow-[0_8px_20px_rgba(0,0,0,0.1)]"
                   style={{ backgroundImage: gradientFromEmotionParam(ticket.emotions || null) }}
                 >
-                  <p className="line-clamp-1 text-[2cqw] font-bold leading-tight">
+                  <p className={`line-clamp-1 ${YEOUN_TICKET.label} leading-tight`}>
                     {ticketGridTitle(ticket)}
                   </p>
-                  <p className="mt-[0.5cqh] text-[4.2cqw] font-black leading-none">
+                  <p className={`mt-[0.5cqh] ${YEOUN_TICKET.headline}`}>
                     {ticketGridHeadline(ticket)}
                   </p>
-                  <p className="mt-[0.5cqh] text-[1.8cqw] font-semibold">
+                  <p className={`mt-[0.5cqh] ${YEOUN_TICKET.meta}`}>
                     {formatTicketDateFromId(ticket.id)}
                   </p>
                   {ticket.quote ? (
-                    <p className="mt-[0.4cqh] line-clamp-2 w-full text-[1.6cqw] font-medium leading-snug">
+                    <p className={`mt-[0.4cqh] line-clamp-2 w-full ${YEOUN_TICKET.meta}`}>
                       {ticket.quote}
                     </p>
                   ) : null}
@@ -187,7 +190,7 @@ export default function ProfilePage() {
             </section>
           ) : (
             <section
-              className={`${MAIN_BTN} ${BLOCK_GAP} border border-[#FDAFC7] bg-[#ffffff] text-[#3c3c3c] shadow-[0_12px_24px_rgba(0,0,0,0.08)]`}
+              className={`mx-auto ${YEOUN_BLOCK_GAP} ${YEOUN_BTN} ${YEOUN_CONTENT_W} border-[#FDAFC7] bg-[#ffffff] text-[#3c3c3c] shadow-[0_12px_24px_rgba(0,0,0,0.08)]`}
             >
               아직 발행한 티켓이 없어요.
             </section>

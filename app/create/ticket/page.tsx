@@ -1,7 +1,15 @@
 "use client";
 
+import { CreateFlowShell } from "../_shared/CreateFlowShell";
+import { FlowButtonRow, FlowPrimaryHalf, FlowSecondaryHalf } from "../_shared/FlowButtons";
 import { TicketFrontContent } from "../_shared/TicketFrontContent";
 import { useTicketRegistration } from "@/lib/ticket/use-ticket-registration";
+import {
+  YEOUN_TICKET,
+  YEOUN_TICKET_CARD,
+  YEOUN_TICKET_CARD_INNER,
+  YEOUN_TICKET_SLOT,
+} from "@/lib/ui/yeoun-scale";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { buildGradient, EMOTION_COLORS } from "../_shared/ticket-gradient";
@@ -44,69 +52,52 @@ function TicketContent() {
   };
 
   return (
-    <div
-      className="min-h-screen bg-[#FFFFF5] px-6 py-10 text-[#131313]"
-      style={{ fontFamily: "Inter, sans-serif" }}
-    >
-      <main className="mx-auto w-full max-w-[420px] [container-type:size]">
-        <button
-          type="button"
-          onClick={() => router.push("/main")}
-          className="ml-auto block text-[8cqw] leading-none text-[#FDAFC7] transition hover:opacity-80"
-          aria-label="닫기"
-        >
-          ×
-        </button>
-
-        <h1 className="mt-10 text-center text-[5cqw] font-extrabold tracking-[-0.03em]">
-          가장 기억에 남는 가사나 대사를{" "}
-          <span className="text-[#FDAFC7]">입력</span>해주세요.
-        </h1>
-
-        <section
-          className="mx-auto mt-10 flex h-[min(430px,40dvh)] w-full flex-col items-center justify-center rounded-[14px] border border-[#ece8e1] px-[6cqw] text-center shadow-[0_8px_20px_rgba(0,0,0,0.12)]"
-          style={{ backgroundImage: ticketBackground }}
-        >
-          <TicketFrontContent ticket={registration} />
-
-          <div className="mt-[26px] flex h-[155px] w-[86%] flex-col items-center justify-center gap-3 rounded-[10px] bg-[rgba(255,255,255,0.5)] px-4 py-3 shadow-[0_4px_10px_rgba(0,0,0,0.12)]">
-            <textarea
-              value={draftQuote}
-              onChange={(e) => setDraftQuote(e.target.value)}
-              placeholder="클릭하여 입력해주세요."
-              rows={3}
-              className="min-h-[72px] w-full resize-none bg-transparent text-center text-[3.6cqw] font-semibold leading-[1.35] text-[#131313] outline-none placeholder:text-[#131313]/60 placeholder:text-center"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                const q = draftQuote.trim();
-                router.push(buildFrontCompleteHref({ quote: q }));
-              }}
-              className="h-[32px] w-[92px] rounded-[12px] border border-[#FDAFC7] bg-[#FDAFC7] text-[2.8cqw] font-semibold text-[#222] shadow-[0_4px_8px_rgba(0,0,0,0.16),inset_0_1px_0_rgba(255,255,255,0.45)] transition hover:bg-[#f99fbe]"
-            >
-              입력하기
-            </button>
-          </div>
-        </section>
-
-        <div className="mx-auto mt-8 flex w-full items-center justify-between gap-4">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="h-[min(92px,9dvh)] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-white text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.16)] transition hover:bg-[#fff7fa]"
-          >
+    <CreateFlowShell
+      title={
+        <>
+          가장 기억에 남는 가사나 대사를 <span className="text-[#FDAFC7]">입력</span>해주세요.
+        </>
+      }
+      footer={
+        <FlowButtonRow>
+          <FlowSecondaryHalf type="button" onClick={() => router.back()}>
             이전
-          </button>
-          <button
+          </FlowSecondaryHalf>
+          <FlowPrimaryHalf
             type="button"
             onClick={() => router.push(buildFrontCompleteHref({ skip: true }))}
-            className="h-[min(92px,9dvh)] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-[#FDAFC7] text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.45)] transition hover:bg-[#f99fbe]"
           >
             스킵하기
-          </button>
-        </div>
-      </main>
-    </div>
+          </FlowPrimaryHalf>
+        </FlowButtonRow>
+      }
+    >
+      <div className={YEOUN_TICKET_SLOT}>
+        <section className={YEOUN_TICKET_CARD} style={{ backgroundImage: ticketBackground }}>
+          <div className={`${YEOUN_TICKET_CARD_INNER} justify-start gap-[1.2cqh] pt-[10cqh]`}>
+            <TicketFrontContent ticket={registration} />
+            <div className="flex w-[86%] flex-col items-center gap-[1.2cqh] rounded-[2cqw] bg-[rgba(255,255,255,0.55)] px-[3cqw] py-[1.6cqh] shadow-[0_4px_10px_rgba(0,0,0,0.12)]">
+              <textarea
+                value={draftQuote}
+                onChange={(e) => setDraftQuote(e.target.value)}
+                placeholder="클릭하여 입력"
+                rows={2}
+                className={`min-h-[2.8cqh] w-full resize-none bg-transparent text-center ${YEOUN_TICKET.quote} outline-none placeholder:text-[#131313]/55`}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const q = draftQuote.trim();
+                  router.push(buildFrontCompleteHref({ quote: q }));
+                }}
+                className="flex h-[min(22px,2.4dvh)] min-h-[20px] w-[min(52px,12cqw)] items-center justify-center rounded-[2cqw] border border-[#FDAFC7] bg-[#FDAFC7] text-[2cqw] font-bold leading-none text-[#222] shadow-[0_2px_5px_rgba(0,0,0,0.1)] transition hover:bg-[#f99fbe]"
+              >
+                입력하기
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </CreateFlowShell>
   );
 }

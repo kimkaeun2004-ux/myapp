@@ -1,6 +1,16 @@
 "use client";
 
 import { displayNameFromEmail, signInOrSignUpWithEmail } from "@/lib/auth/email";
+import {
+  YEOUN_BTN,
+  YEOUN_CONTENT_W,
+  YEOUN_INPUT,
+  YEOUN_LABEL,
+  YEOUN_SCREEN,
+  YEOUN_SHELL_SECTION,
+  YEOUN_TEXT,
+  yeounFont,
+} from "@/lib/ui/yeoun-scale";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -58,72 +68,63 @@ export default function EmailLoginPage() {
     }
   };
 
+  const submitBtn = `${YEOUN_BTN} w-full border-[#FDAFC7] bg-[#FDAFC7] text-[#2c2c2c] transition hover:bg-[#f99fbe] disabled:cursor-not-allowed disabled:opacity-70`;
+
   return (
-    <div
-      className="h-[100dvh] overflow-hidden bg-[#FFFFF5] text-[#131313]"
-      style={{ fontFamily: "Inter, sans-serif" }}
-    >
-        <main className="mx-auto flex h-full w-full items-center justify-center overflow-hidden">
-          <section className="relative flex w-[min(38vw,60dvh)] aspect-[520/860] min-w-[320px] max-w-[420px] flex-col items-center bg-[#FFFFF5] [container-type:size]">
-            <button
-              type="button"
-              onClick={() => router.push("/")}
-              className="absolute left-[6cqw] top-[6cqh] text-[3.6cqw] font-semibold text-[#F3B4C8]"
-            >
-              ←
+    <div className={YEOUN_SCREEN} style={yeounFont}>
+      <main className="mx-auto flex h-full w-full items-center justify-center overflow-hidden">
+        <section className={`${YEOUN_SHELL_SECTION} items-center`}>
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            className={`absolute left-[6cqw] top-[6cqh] ${YEOUN_TEXT.back}`}
+          >
+            ←
+          </button>
+
+          <h1 className={`mt-[20.4cqh] text-center ${YEOUN_TEXT.brand}`}>YEOUN</h1>
+          <p className={`mt-[1.9cqh] text-center ${YEOUN_TEXT.title}`}>이메일로 시작하기</p>
+
+          <form
+            onSubmit={handleSubmit}
+            className={`mt-[11.6cqh] flex ${YEOUN_CONTENT_W} flex-col gap-[1.3cqh]`}
+          >
+            <label className={YEOUN_LABEL}>
+              이메일
+              <input
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={YEOUN_INPUT}
+                placeholder="example@email.com"
+              />
+            </label>
+
+            <label className={YEOUN_LABEL}>
+              비밀번호
+              <input
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={YEOUN_INPUT}
+                placeholder="6자 이상"
+              />
+            </label>
+
+            {errorMessage ? (
+              <p className={`text-center ${YEOUN_TEXT.bodyMedium} text-[#b14d70]`}>
+                {errorMessage}
+              </p>
+            ) : null}
+
+            <button type="submit" disabled={isSubmitting} className={`mt-[1cqh] ${submitBtn}`}>
+              {isSubmitting ? "시작하는 중..." : "시작하기"}
             </button>
-
-            <h1 className="mt-[20.4cqh] text-center text-[20.5cqw] font-black leading-none tracking-[-0.03em] text-[#F3B4C8]">
-              YEOUN
-            </h1>
-            <p className="mt-[1.9cqh] text-center text-[3.3cqw] font-bold tracking-[-0.02em]">
-              이메일로 시작하기
-            </p>
-
-            <form
-              onSubmit={handleSubmit}
-              className="mt-[11.6cqh] flex w-[78cqw] flex-col gap-[1.3cqh]"
-            >
-              <label className="text-[2.55cqw] font-bold tracking-[-0.01em] text-[#3c3c3c]">
-                이메일
-                <input
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-[0.8cqh] h-[min(66px,7.2dvh)] min-h-[46px] w-full rounded-[2cqw] border border-[#F3B4C8] bg-white px-[3cqw] text-[2.55cqw] font-medium outline-none focus:ring-2 focus:ring-[#FDAFC7]"
-                  placeholder="example@email.com"
-                />
-              </label>
-
-              <label className="text-[2.55cqw] font-bold tracking-[-0.01em] text-[#3c3c3c]">
-                비밀번호
-                <input
-                  type="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="mt-[0.8cqh] h-[min(66px,7.2dvh)] min-h-[46px] w-full rounded-[2cqw] border border-[#F3B4C8] bg-white px-[3cqw] text-[2.55cqw] font-medium outline-none focus:ring-2 focus:ring-[#FDAFC7]"
-                  placeholder="6자 이상"
-                />
-              </label>
-
-              {errorMessage ? (
-                <p className="text-center text-[2.4cqw] font-semibold text-[#b14d70]">
-                  {errorMessage}
-                </p>
-              ) : null}
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="mt-[1cqh] h-[min(66px,7.2dvh)] min-h-[46px] w-full rounded-[2cqw] border border-[#FDAFC7] bg-[#FDAFC7] text-[2.55cqw] font-bold tracking-[-0.01em] text-[#2c2c2c] transition hover:bg-[#f99fbe] disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {isSubmitting ? "시작하는 중..." : "시작하기"}
-              </button>
-            </form>
-          </section>
-        </main>
+          </form>
+        </section>
+      </main>
     </div>
   );
 }

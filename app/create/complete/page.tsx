@@ -1,7 +1,18 @@
 "use client";
 
+import { CreateFlowShell } from "../_shared/CreateFlowShell";
+import { FlowButtonRow, FlowPrimaryHalf, FlowSecondaryHalf } from "../_shared/FlowButtons";
+import { TicketFrontContent } from "../_shared/TicketFrontContent";
 import { clearTicketDraft, loadTicketDraft } from "@/lib/ticket/draft-storage";
 import { saveStoredTicket } from "@/lib/tickets/storage";
+import { saveTicketToSupabase } from "@/lib/tickets/supabase-tickets";
+import {
+  YEOUN_MUTED,
+  YEOUN_TICKET_CARD,
+  YEOUN_TICKET_CARD_INNER,
+  YEOUN_TICKET_SLOT,
+  YEOUN_TEXT,
+} from "@/lib/ui/yeoun-scale";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { gradientFromEmotionParam } from "../_shared/ticket-gradient";
@@ -51,8 +62,22 @@ function CompleteContent() {
     setIsSaving(false);
 
     if (!result.ok) {
-      setSaveError("저장에 실패했습니다. 사진 크기를 줄이거나 브라우저 저장 공간을 확인해 주세요.");
+      setSaveError("저장에 실패했습니다.");
       return;
+    }
+
+    try {
+      await saveTicketToSupabase({
+        emotion: emotionsParam ?? "",
+        concertName: reg.concertName,
+        artist: reg.artist,
+        quote,
+        venue: reg.venue,
+        date: reg.date,
+        day: reg.day,
+      });
+    } catch {
+      // Supabase 저장은 베스트 에포트.
     }
 
     clearTicketDraft();
@@ -61,96 +86,66 @@ function CompleteContent() {
   };
 
   return (
-    <div
-      className="min-h-screen bg-[#FFFFF5] px-6 py-10 text-[#131313]"
-      style={{ fontFamily: "Inter, sans-serif" }}
-    >
-      <main className="mx-auto w-full max-w-[420px] [container-type:size]">
-        <button
-          type="button"
-          onClick={() => router.push("/main")}
-          className="ml-auto block text-[8cqw] leading-none text-[#FDAFC7] transition hover:opacity-80"
-          aria-label="닫기"
-        >
-          ×
-        </button>
-
-        <h1 className="mt-10 text-center text-[5cqw] font-extrabold tracking-[-0.03em]">
+    <CreateFlowShell
+      title={
+        <>
           티켓이 <span className="text-[#FDAFC7]">완성</span>되었어요!
-        </h1>
-
+        </>
+      }
+      subtitle={backImage ? "티켓을 눌러 뒷면을 볼 수 있어요." : undefined}
+      footer={
+        <>
+          <FlowButtonRow>
+            <FlowSecondaryHalf
+              type="button"
+              onClick={() => router.back()}
+              disabled={isSaving}
+              className="disabled:opacity-60"
+            >
+              이전
+            </FlowSecondaryHalf>
+            <FlowPrimaryHalf
+              type="button"
+              onClick={() => void handleSave()}
+              disabled={isSaving}
+              className="disabled:opacity-70"
+            >
+              {isSaving ? "저장 중..." : "저장하기"}
+            </FlowPrimaryHalf>
+          </FlowButtonRow>
+          {saveError ? (
+            <p className={`text-center ${YEOUN_TEXT.bodyMedium} text-[#b14d70]`}>{saveError}</p>
+          ) : null}
+        </>
+      }
+    >
+      <div className={YEOUN_TICKET_SLOT}>
         <button
           type="button"
           onClick={() => {
             if (backImage) setShowBack((prev) => !prev);
           }}
-          className={`mx-auto mt-10 flex h-[min(430px,40dvh)] w-full flex-col items-center overflow-hidden rounded-[14px] border border-[#ece8e1] text-center shadow-[0_8px_20px_rgba(0,0,0,0.12)] ${
-            !showBack || !backImage ? "px-[6cqw]" : ""
-          }`}
-          style={!showBack ? { backgroundImage: ticketBackground } : undefined}
+          className={`${YEOUN_TICKET_CARD} p-0`}
+          style={!showBack || !backImage ? { backgroundImage: ticketBackground } : undefined}
         >
           {!showBack || !backImage ? (
-            <div className="flex h-full w-full flex-col items-center justify-center">
-              <p className="text-[2.7cqw] font-bold tracking-[0.01em]">
-                {registration.concertName || "CONCERT"}
-              </p>
-              <p className="mt-[1.6cqh] text-[9.2cqw] font-black leading-none">
-                {registration.artist || "ARTIST"}
-              </p>
-              {[registration.date, registration.day].filter(Boolean).length > 0 ? (
-                <p className="mt-[1.9cqh] text-[3.6cqw] font-semibold">
-                  {[registration.date, registration.day].filter(Boolean).join(" · ")}
-                </p>
-              ) : null}
-              {registration.venue ? (
-                <p className="mt-[1.3cqh] text-[3.2cqw] font-semibold">{registration.venue}</p>
-              ) : null}
-              {frontHasQuote ? (
-                <p className="mt-[2.1cqh] w-[86%] whitespace-pre-wrap break-words text-center text-[3.6cqw] font-semibold leading-[1.35] tracking-[0.01em] text-[#131313]">
-                  {quote}
-                </p>
-              ) : null}
+            <div className={YEOUN_TICKET_CARD_INNER}>
+              <TicketFrontContent
+                ticket={registration}
+                quote={frontHasQuote ? quote : undefined}
+              />
             </div>
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={backImage}
-              alt="티켓 뒷면 이미지"
+              alt="티켓 뒷면"
               className="h-full w-full rounded-[14px] object-cover"
             />
           )}
         </button>
-
-        {backImage ? (
-          <p className="mt-3 text-center text-[3cqw] font-medium text-[#131313]/50">
-            티켓 클릭해서 뒷면 보기
-          </p>
-        ) : null}
-
-        <div className="mx-auto mt-6 flex w-full items-center justify-between gap-4">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            disabled={isSaving}
-            className="h-[min(92px,9dvh)] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-white text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.16)] transition hover:bg-[#fff7fa] disabled:opacity-60"
-          >
-            이전
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleSave()}
-            disabled={isSaving}
-            className="h-[min(92px,9dvh)] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-[#FDAFC7] text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.45)] transition hover:bg-[#f99fbe] disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {isSaving ? "저장 중..." : "저장하기"}
-          </button>
-        </div>
-
-        {saveError ? (
-          <p className="mt-4 text-center text-[3.4cqw] font-semibold text-[#b14d70]">{saveError}</p>
-        ) : null}
-      </main>
-    </div>
+      </div>
+    </CreateFlowShell>
   );
 }
 
@@ -161,4 +156,3 @@ export default function CompletePage() {
     </Suspense>
   );
 }
-
