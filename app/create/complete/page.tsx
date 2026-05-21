@@ -4,8 +4,11 @@ import { CreateFlowShell } from "../_shared/CreateFlowShell";
 import { FlowButtonRow, FlowPrimaryHalf, FlowSecondaryHalf } from "../_shared/FlowButtons";
 import { TicketFrontContent } from "../_shared/TicketFrontContent";
 import { clearTicketDraft, loadTicketDraft } from "@/lib/ticket/draft-storage";
-import { saveStoredTicket } from "@/lib/tickets/storage";
-import { saveTicketToSupabase } from "@/lib/tickets/supabase-tickets";
+import {
+  clearBackImageDraft,
+  loadBackImageDraft,
+} from "@/lib/tickets/back-image-store";
+import { saveUserTicket } from "@/lib/tickets/user-tickets";
 import {
   YEOUN_MUTED,
   YEOUN_TICKET_CARD,
@@ -13,7 +16,7 @@ import {
   YEOUN_TICKET_SLOT,
   YEOUN_TEXT,
 } from "@/lib/ui/yeoun-scale";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { gradientFromEmotionParam } from "../_shared/ticket-gradient";
 
@@ -25,6 +28,7 @@ function CompleteContent() {
   const [registration, setRegistration] = useState(loadTicketDraft());
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const saveStartedRef = useRef(false);
 
   const emotionsParam = searchParams.get("emotions");
   const quote = searchParams.get("quote")?.trim() ?? "";
@@ -34,24 +38,28 @@ function CompleteContent() {
   const frontHasQuote = quote.length > 0;
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const draft = window.sessionStorage.getItem("yeounBackImageDraft") ?? "";
-    setBackImageDraft(draft);
-    setRegistration(loadTicketDraft());
+    void (async () => {
+      setBackImageDraft(await loadBackImageDraft());
+      setRegistration(loadTicketDraft());
+    })();
   }, []);
 
   const handleSave = async () => {
-    if (typeof window === "undefined" || isSaving) return;
+    if (typeof window === "undefined" || isSaving || saveStartedRef.current) return;
 
+    saveStartedRef.current = true;
     setIsSaving(true);
     setSaveError("");
 
     const reg = loadTicketDraft();
-    const result = await saveStoredTicket({
+    const resolvedBack =
+      searchParams.get("back") ?? backImageDraft ?? (await loadBackImageDraft());
+
+    const result = await saveUserTicket({
       id: Date.now(),
       emotions: emotionsParam ?? "",
       quote,
-      backImage: backImage ?? "",
+      backImage: resolvedBack,
       concertName: reg.concertName,
       artist: reg.artist,
       date: reg.date,
@@ -59,30 +67,15 @@ function CompleteContent() {
       venue: reg.venue,
     });
 
-    setIsSaving(false);
-
     if (!result.ok) {
-      setSaveError("저장에 실패했습니다.");
+      saveStartedRef.current = false;
+      setIsSaving(false);
+      setSaveError("저장에 실패했습니다. 용량이 크면 뒷면 사진 없이 다시 시도해 주세요.");
       return;
     }
 
-    try {
-      await saveTicketToSupabase({
-        emotion: emotionsParam ?? "",
-        concertName: reg.concertName,
-        artist: reg.artist,
-        quote,
-        venue: reg.venue,
-        date: reg.date,
-        day: reg.day,
-        backImage: backImage ?? "",
-      });
-    } catch {
-      // Supabase 저장은 베스트 에포트.
-    }
-
     clearTicketDraft();
-    window.sessionStorage.removeItem("yeounBackImageDraft");
+    await clearBackImageDraft();
     router.push("/main");
   };
 

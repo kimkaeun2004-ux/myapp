@@ -1,5 +1,9 @@
 import type { ReportTicketRecord } from "@/lib/emotion/compute-report";
-import type { StoredTicket } from "@/lib/tickets/storage";
+import {
+  isTicketDeleted,
+  storedTicketsMatch,
+  type StoredTicket,
+} from "@/lib/tickets/storage";
 import { getSupabase } from "@/lib/supabase/client";
 
 export type YeounTicketRow = {
@@ -38,7 +42,7 @@ export async function getCurrentUserId(): Promise<string | null> {
 
 export async function saveTicketToSupabase(
   input: SaveYeounTicketInput
-): Promise<{ ok: boolean }> {
+): Promise<{ ok: boolean; id?: string }> {
   const userId = await getCurrentUserId();
   if (!userId) return { ok: false };
 
@@ -54,7 +58,11 @@ export async function saveTicketToSupabase(
     back_image: input.backImage ?? null,
   };
 
-  let { error } = await getSupabase().from("yeoun_tickets").insert(fullRow);
+  let { data, error } = await getSupabase()
+    .from("yeoun_tickets")
+    .insert(fullRow)
+    .select("id")
+    .single();
 
   if (error && isMissingColumnError(error.message)) {
     const minimal = {
@@ -63,14 +71,19 @@ export async function saveTicketToSupabase(
       quote: input.quote ?? null,
       back_image: input.backImage ?? null,
     };
-    ({ error } = await getSupabase().from("yeoun_tickets").insert(minimal));
+    ({ data, error } = await getSupabase()
+      .from("yeoun_tickets")
+      .insert(minimal)
+      .select("id")
+      .single());
   }
 
   if (error && process.env.NODE_ENV === "development") {
     console.warn("[yeoun] saveTicketToSupabase:", error.message);
   }
 
-  return { ok: !error };
+  const id = data && typeof data === "object" && "id" in data ? String(data.id) : undefined;
+  return { ok: !error, id };
 }
 
 export async function deleteTicketFromSupabase(
@@ -157,20 +170,24 @@ async function fetchUserStoredTicketsMinimal(): Promise<StoredTicket[]> {
   return (data as YeounTicketRow[]).map(mapYeounTicketRowToStoredTicket);
 }
 
-/** 로그인 직후: 서버에 없고 로컬에만 있는 티켓을 한 번 업로드 */
+/** 로컬에만 있는 티켓을 Supabase에 업로드 (이미 있는 항목은 건너뜀) */
 export async function syncLocalTicketsToSupabase(): Promise<void> {
   const userId = await getCurrentUserId();
   if (!userId || typeof window === "undefined") return;
 
   const remote = await fetchUserStoredTickets();
-  if (remote.length > 0) return;
-
   const { loadStoredTickets } = await import("@/lib/tickets/storage");
   const local = loadStoredTickets();
   if (local.length === 0) return;
 
+  const { attachSupabaseIdToLocalTicket } = await import("@/lib/tickets/storage");
+
   for (const ticket of local) {
-    await saveTicketToSupabase({
+    if (isTicketDeleted(ticket)) continue;
+    if (ticket.supabaseId) continue;
+    if (remote.some((row) => storedTicketsMatch(row, ticket))) continue;
+
+    const { ok, id } = await saveTicketToSupabase({
       emotion: ticket.emotions,
       concertName: ticket.concertName,
       artist: ticket.artist,
@@ -180,6 +197,10 @@ export async function syncLocalTicketsToSupabase(): Promise<void> {
       day: ticket.day,
       backImage: ticket.backImage || undefined,
     });
+
+    if (ok && id) {
+      await attachSupabaseIdToLocalTicket(ticket, id);
+    }
   }
 }
 

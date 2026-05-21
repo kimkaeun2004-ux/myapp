@@ -7,6 +7,10 @@ import {
   FlowSecondaryHalf,
 } from "../_shared/FlowButtons";
 import { compressDataUrl } from "@/lib/image/compress-data-url";
+import {
+  clearBackImageDraft,
+  saveBackImageDraft,
+} from "@/lib/tickets/back-image-store";
 import { YEOUN_MUTED, YEOUN_TEXT, YEOUN_TICKET_CARD, YEOUN_TICKET_SLOT } from "@/lib/ui/yeoun-scale";
 import { ChangeEvent, Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -41,15 +45,6 @@ function BackContent() {
     return qs.length > 0 ? `/create/complete?${qs}` : "/create/complete";
   };
 
-  const persistBackImage = (dataUrl: string | null) => {
-    if (typeof window === "undefined") return;
-    if (dataUrl) {
-      window.sessionStorage.setItem("yeounBackImageDraft", dataUrl);
-    } else {
-      window.sessionStorage.removeItem("yeounBackImageDraft");
-    }
-  };
-
   const goToComplete = async (opts: { skipBack?: boolean }) => {
     setErrorMessage("");
     setIsProcessing(true);
@@ -57,13 +52,13 @@ function BackContent() {
     try {
       if (!opts.skipBack && backDataUrl) {
         const compressed = await compressDataUrl(backDataUrl, {
-          maxWidth: 1200,
-          maxHeight: 1200,
-          quality: 0.7,
+          maxWidth: 960,
+          maxHeight: 960,
+          quality: 0.62,
         });
-        persistBackImage(compressed);
+        await saveBackImageDraft(compressed);
       } else {
-        persistBackImage(null);
+        await clearBackImageDraft();
       }
       router.push(buildCompleteHref());
     } catch {

@@ -9,6 +9,14 @@ export const VENUE_PATTERN =
 const CONCERT_NAME_NOISE =
   /^(?:관람\s*일|공연\s*장소|공연장|좌석|입장|seat|gate|예매|주문|order|ticket|barcode|qr|티켓|예매번호|주문번호|고객|tel|전화|www\.|http)/i;
 
+/** 예매일·발권일 등 — 관람일로 쓰지 않음 */
+const BOOKING_DATE_LABEL =
+  /예매\s*일|예매일|발권\s*일|구매\s*일|결제\s*일|주문\s*일|booking\s*date|purchase\s*date|order\s*date/i;
+
+/** 관람(공연) 일시만 인식 */
+const VIEWING_DATE_LABEL =
+  /관람\s*일(?:시)?|공연\s*일|입장\s*일|show\s*date/i;
+
 const DATE_IN_LINE =
   /(?:20\d{2}|\d{2}[.\-/]\d{2})[.\-/년월]?\s*\d{1,2}|관람\s*일|일시|공연\s*일/i;
 
@@ -120,7 +128,7 @@ function parseTimeSuffix(text: string): string {
   const normalized = text.replace(/\s+/g, " ");
   const time =
     normalized.match(
-      /(?:일시|시간|TIME|SHOW\s*TIME)\s*[:：]?\s*(\d{1,2})\s*[:：시]\s*(\d{2})/i
+      /(?:관람\s*)?(?:일시|시간|TIME|SHOW\s*TIME)\s*[:：]?\s*(\d{1,2})\s*[:：시]\s*(\d{2})/i
     ) ?? normalized.match(/(\d{1,2})\s*[:：시]\s*(\d{2})\s*(?:분)?/i);
 
   if (!time) return "";
@@ -130,10 +138,12 @@ function parseTimeSuffix(text: string): string {
   return ` ${pad2(h)}:${pad2(m)}`;
 }
 
-export function parseDateFromOcrText(text: string): { date: string; day: string } {
-  const normalized = text.replace(/\s+/g, " ");
+function isBookingOnlyDateLine(text: string): boolean {
+  return BOOKING_DATE_LABEL.test(text) && !VIEWING_DATE_LABEL.test(text);
+}
 
-  const labeledKorean =
+function parseLabeledViewingDate(normalized: string): { date: string; day: string } | null {
+  const labeled =
     normalized.match(
       /관람\s*일(?:시)?\s*[:：]?\s*(20\d{2})\s*[년.\-/]\s*(\d{1,2})\s*[월.\-/]\s*(\d{1,2})\s*일?(?:\s*[\(,]?\s*(일|월|화|수|목|금|토|Sun|Mon|Tue|Wed|Thu|Fri|Sat)[\),]?)?/i
     ) ??
@@ -141,17 +151,24 @@ export function parseDateFromOcrText(text: string): { date: string; day: string 
       /관람\s*일(?:시)?\s*[:：]?\s*(\d{2})[.\-/](\d{2})[.\-/](\d{2})(?:\s*[\(,]?\s*(일|월|화|수|목|금|토|Sun|Mon|Tue|Wed|Thu|Fri|Sat)[\),]?)?/i
     ) ??
     normalized.match(
-      /(?:공연\s*일|SHOW\s*DATE|DATE)\s*[:：]?\s*(20\d{2})\s*[년.\-/]\s*(\d{1,2})\s*[월.\-/]\s*(\d{1,2})/i
+      /공연\s*일\s*[:：]?\s*(20\d{2})\s*[년.\-/]\s*(\d{1,2})\s*[월.\-/]\s*(\d{1,2})\s*일?(?:\s*[\(,]?\s*(일|월|화|수|목|금|토|Sun|Mon|Tue|Wed|Thu|Fri|Sat)[\),]?)?/i
+    ) ??
+    normalized.match(
+      /(?:SHOW\s*DATE|SHOW\s*DAY)\s*[:：]?\s*(20\d{2})\s*[년.\-/]\s*(\d{1,2})\s*[월.\-/]\s*(\d{1,2})/i
     );
 
-  if (labeledKorean) {
-    const parsed = parseDateParts(labeledKorean[1], labeledKorean[2], labeledKorean[3], labeledKorean[4]);
-    if (parsed) {
-      const time = parseTimeSuffix(normalized);
-      return { date: parsed.date + time, day: parsed.day };
-    }
-  }
+  if (!labeled) return null;
 
+  const parsed = parseDateParts(labeled[1], labeled[2], labeled[3], labeled[4]);
+  if (!parsed) return null;
+
+  return {
+    date: parsed.date + parseTimeSuffix(normalized),
+    day: parsed.day,
+  };
+}
+
+function parseGenericYmd(normalized: string): { date: string; day: string } | null {
   const ymd =
     normalized.match(
       /(20\d{2})[.\-/년\s]*(\d{1,2})[.\-/월\s]*(\d{1,2})\s*(?:일)?(?:\s*[\(,]?\s*(Sun|Mon|Tue|Wed|Thu|Fri|Sat|일|월|화|수|목|금|토)[\),]?)?/i
@@ -160,13 +177,48 @@ export function parseDateFromOcrText(text: string): { date: string; day: string 
       /(\d{2})[.\-/](\d{2})[.\-/](\d{2})\s*(?:[\(,]?\s*(Sun|Mon|Tue|Wed|Thu|Fri|Sat|일|월|화|수|목|금|토)[\),]?)?/i
     );
 
-  if (ymd) {
-    const parsed = parseDateParts(ymd[1], ymd[2], ymd[3], ymd[4]);
-    if (parsed) {
-      const time = parseTimeSuffix(normalized);
-      return { date: parsed.date + time, day: parsed.day };
-    }
+  if (!ymd) return null;
+
+  const parsed = parseDateParts(ymd[1], ymd[2], ymd[3], ymd[4]);
+  if (!parsed) return null;
+
+  return {
+    date: parsed.date + parseTimeSuffix(normalized),
+    day: parsed.day,
+  };
+}
+
+/** 관람일(공연일)만 추출 — 예매일·발권일 제외 */
+export function parseViewingDateFromOcrText(text: string): { date: string; day: string } {
+  if (isBookingOnlyDateLine(text)) {
+    return { date: "", day: "" };
   }
+
+  const normalized = text.replace(/\s+/g, " ");
+
+  const labeled = parseLabeledViewingDate(normalized);
+  if (labeled) return labeled;
+
+  const viewingIdx = normalized.search(/관람\s*일(?:시)?/i);
+  if (viewingIdx >= 0) {
+    const nearViewing = normalized.slice(viewingIdx, viewingIdx + 96);
+    const fromSlice = parseLabeledViewingDate(nearViewing) ?? parseGenericYmd(nearViewing);
+    if (fromSlice?.date) return fromSlice;
+  }
+
+  const showIdx = normalized.search(/공연\s*일/i);
+  if (showIdx >= 0 && !BOOKING_DATE_LABEL.test(normalized.slice(0, showIdx))) {
+    const nearShow = normalized.slice(showIdx, showIdx + 72);
+    const fromShow = parseLabeledViewingDate(nearShow) ?? parseGenericYmd(nearShow);
+    if (fromShow?.date) return fromShow;
+  }
+
+  if (BOOKING_DATE_LABEL.test(normalized)) {
+    return { date: "", day: "" };
+  }
+
+  const generic = parseGenericYmd(normalized);
+  if (generic) return generic;
 
   const looseDay = normalized.match(/\b(Sun|Mon|Tue|Wed|Thu|Fri|Sat)\b/i);
   if (looseDay) {
@@ -176,25 +228,42 @@ export function parseDateFromOcrText(text: string): { date: string; day: string 
   return { date: "", day: "" };
 }
 
-/** 줄 단위로 관람일·일시 탐색 */
-export function parseDateFromLines(lines: OcrLine[]): { date: string; day: string } {
-  const dateLike = (text: string) =>
-    DATE_IN_LINE.test(text) || TIME_IN_LINE.test(text) || /20\d{2}/.test(text);
+/** @deprecated — parseViewingDateFromOcrText 사용 */
+export function parseDateFromOcrText(text: string): { date: string; day: string } {
+  return parseViewingDateFromOcrText(text);
+}
 
-  const prioritized = [
-    ...lines.filter((l) => /관람|일시|공연\s*일|show\s*date/i.test(l.text)),
-    ...lines.filter((l) => dateLike(l.text)),
+/** 줄 단위로 관람일·관람일시만 탐색 (예매일 줄 무시) */
+export function parseViewingDateFromLines(lines: OcrLine[]): { date: string; day: string } {
+  const dateLike = (text: string) =>
+    (DATE_IN_LINE.test(text) || TIME_IN_LINE.test(text) || /20\d{2}/.test(text)) &&
+    !isBookingOnlyDateLine(text);
+
+  const tiers: OcrLine[][] = [
+    lines.filter((l) => /관람\s*일(?:시)?/i.test(l.text)),
+    lines.filter((l) => /공연\s*일/i.test(l.text) && !/예매/i.test(l.text)),
+    lines.filter(
+      (l) => VIEWING_DATE_LABEL.test(l.text) && !BOOKING_DATE_LABEL.test(l.text)
+    ),
+    lines.filter((l) => dateLike(l.text)),
   ];
 
   const seen = new Set<string>();
-  for (const line of prioritized) {
-    if (seen.has(line.text)) continue;
-    seen.add(line.text);
-    const parsed = parseDateFromOcrText(line.text);
-    if (parsed.date || parsed.day) return parsed;
+  for (const tier of tiers) {
+    for (const line of tier) {
+      if (seen.has(line.text)) continue;
+      seen.add(line.text);
+      const parsed = parseViewingDateFromOcrText(line.text);
+      if (parsed.date || parsed.day) return parsed;
+    }
   }
 
   return { date: "", day: "" };
+}
+
+/** @deprecated — parseViewingDateFromLines 사용 */
+export function parseDateFromLines(lines: OcrLine[]): { date: string; day: string } {
+  return parseViewingDateFromLines(lines);
 }
 
 function cleanVenueText(raw: string): string {
@@ -354,11 +423,11 @@ export function buildDraftFromOcr(page: OcrPageLike): Pick<
   const lines = extractOcrLines(page);
   const concertName = parseConcertNameFromLines(lines);
 
-  let { date, day } = parseDateFromOcrText(rawOcrText);
+  let { date, day } = parseViewingDateFromLines(lines);
   if (!date && !day) {
-    const fromLines = parseDateFromLines(lines);
-    date = fromLines.date;
-    day = fromLines.day;
+    const fromText = parseViewingDateFromOcrText(rawOcrText);
+    date = fromText.date;
+    day = fromText.day;
   }
 
   const venue = parseVenueFromOcrText(rawOcrText, lines, {

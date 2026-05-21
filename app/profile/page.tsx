@@ -25,11 +25,12 @@ import {
   YEOUN_TICKET,
   yeounFont,
 } from "@/lib/ui/yeoun-scale";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function ProfilePage() {
   const router = useRouter();
+  const pathname = usePathname();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [displayName, setDisplayName] = useState("게스트");
@@ -37,6 +38,10 @@ export default function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR);
   const [draftAvatarUrl, setDraftAvatarUrl] = useState(DEFAULT_AVATAR);
   const [tickets, setTickets] = useState<StoredTicket[]>([]);
+
+  const refreshTickets = useCallback(async () => {
+    setTickets(await loadUserTickets());
+  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -49,11 +54,30 @@ export default function ProfilePage() {
       setDraftName(profile.displayName);
       setAvatarUrl(profile.avatarUrl);
       setDraftAvatarUrl(profile.avatarUrl);
-      setTickets(await loadUserTickets());
+      await refreshTickets();
     };
 
     void init();
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (pathname !== "/profile") return;
+    void refreshTickets();
+  }, [pathname, refreshTickets]);
+
+  useEffect(() => {
+    const onFocus = () => void refreshTickets();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void refreshTickets();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [refreshTickets]);
 
   const handleEditToggle = () => {
     if (!isEditing) {

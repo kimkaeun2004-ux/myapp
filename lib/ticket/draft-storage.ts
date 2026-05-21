@@ -34,6 +34,7 @@ function toPersistedDraft(draft: TicketRegistrationDraft): TicketRegistrationDra
     day: draft.day,
     venue: draft.venue,
     rawOcrText: draft.rawOcrText,
+    // imageDataUrl는 용량 때문에 sessionStorage에 저장하지 않음
   };
 }
 
@@ -53,6 +54,9 @@ export function beginNewTicketCreation() {
   window.sessionStorage.removeItem(DRAFT_KEY);
   window.sessionStorage.removeItem("yeounTicket");
   window.sessionStorage.removeItem("yeounBackImageDraft");
+  void import("@/lib/tickets/back-image-store").then(({ clearBackImageDraft }) =>
+    clearBackImageDraft()
+  );
 }
 
 export function hasScannedTicketDraft(): boolean {

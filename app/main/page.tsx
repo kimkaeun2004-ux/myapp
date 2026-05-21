@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { resolveAuthDisplayName, ensureLoggedIn } from "@/lib/auth/session";
 import { loadUserProfile } from "@/lib/profile/user-profile";
 import { deleteUserTicket, loadUserTickets } from "@/lib/tickets/user-tickets";
@@ -36,6 +36,7 @@ export default function MainPage() {
 
 function MainContent() {
   const router = useRouter();
+  const pathname = usePathname();
   const [userName, setUserName] = useState("게스트");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [tickets, setTickets] = useState<StoredTicket[]>([]);
@@ -85,7 +86,13 @@ function MainContent() {
     };
 
     void init();
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 삭제 직후 router 참조 변경으로 목록이 되살아나는 것 방지
+  }, []);
+
+  useEffect(() => {
+    if (pathname !== "/main") return;
+    void loadUserTickets().then(setTickets);
+  }, [pathname]);
 
   const currentTicket = tickets[activeIndex] ?? null;
   const hasTicket = !!currentTicket;
