@@ -15,7 +15,6 @@ import {
 } from "@/lib/ticket/draft-storage";
 import type { TicketRegistrationDraft } from "@/lib/ticket/types";
 import {
-  YEOUN_BADGE_AUTO,
   YEOUN_CONFIRM_INPUT,
   YEOUN_CONFIRM_LABEL,
   YEOUN_TICKET_FORM_CARD,
@@ -88,7 +87,6 @@ export default function ConfirmPage() {
             <div className="flex h-full w-full flex-col justify-center gap-[1.6cqh]">
               <label className={YEOUN_CONFIRM_LABEL}>
                 공연명
-                <span className={YEOUN_BADGE_AUTO}>자동</span>
                 <input
                   value={ticket.concertName}
                   onChange={(e) => updateField("concertName", e.target.value)}
@@ -110,7 +108,6 @@ export default function ConfirmPage() {
               <div className="grid grid-cols-2 gap-[1.6cqw]">
                 <label className={YEOUN_CONFIRM_LABEL}>
                   날짜
-                  <span className={YEOUN_BADGE_AUTO}>자동</span>
                   <input
                     value={ticket.date}
                     onChange={(e) => updateField("date", e.target.value)}
@@ -120,7 +117,6 @@ export default function ConfirmPage() {
                 </label>
                 <label className={YEOUN_CONFIRM_LABEL}>
                   요일
-                  <span className={YEOUN_BADGE_AUTO}>자동</span>
                   <input
                     value={ticket.day}
                     onChange={(e) => updateField("day", e.target.value)}
@@ -132,7 +128,6 @@ export default function ConfirmPage() {
 
               <label className={YEOUN_CONFIRM_LABEL}>
                 공연장
-                <span className={YEOUN_BADGE_AUTO}>자동</span>
                 <input
                   value={ticket.venue}
                   onChange={(e) => updateField("venue", e.target.value)}
