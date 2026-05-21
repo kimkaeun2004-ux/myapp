@@ -1,7 +1,12 @@
 "use client";
 
 import { CreateFlowShell } from "../_shared/CreateFlowShell";
-import { FlowCtaButton } from "../_shared/FlowButtons";
+import {
+  FlowButtonRow,
+  FlowCtaButton,
+  FlowPrimaryHalf,
+  FlowSecondaryHalf,
+} from "../_shared/FlowButtons";
 import { TicketPreview } from "../_shared/TicketPreview";
 import {
   hasScannedTicketDraft,
@@ -59,7 +64,16 @@ export default function ConfirmPage() {
     <CreateFlowShell
       title={isCompleted ? "수정 완료!" : "티켓 정보를 확인해 주세요"}
       footer={
-        isCompleted ? undefined : (
+        isCompleted ? (
+          <FlowButtonRow>
+            <FlowSecondaryHalf type="button" onClick={() => setIsCompleted(false)}>
+              다시 수정하기
+            </FlowSecondaryHalf>
+            <FlowPrimaryHalf type="button" onClick={handleNext}>
+              다음
+            </FlowPrimaryHalf>
+          </FlowButtonRow>
+        ) : (
           <FlowCtaButton type="button" onClick={handleComplete} disabled={!canProceed}>
             수정 완료
           </FlowCtaButton>
@@ -67,25 +81,7 @@ export default function ConfirmPage() {
       }
     >
       {isCompleted ? (
-        <>
-          <TicketPreview ticket={ticket} />
-          <div className="mx-auto mt-8 flex w-full max-w-[78cqw] items-center justify-between gap-4">
-            <button
-              type="button"
-              onClick={() => setIsCompleted(false)}
-              className="h-[min(92px,9dvh)] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-white text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.16)] transition hover:bg-[#fff7fa]"
-            >
-              다시 수정하기
-            </button>
-            <button
-              type="button"
-              onClick={handleNext}
-              className="h-[min(92px,9dvh)] w-1/2 rounded-[18px] border border-[#FDAFC7] bg-[#FDAFC7] text-[4.4cqw] font-semibold tracking-[-0.02em] text-[#222] shadow-[0_10px_16px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.45)] transition hover:bg-[#f99fbe]"
-            >
-              다음
-            </button>
-          </div>
-        </>
+        <TicketPreview ticket={ticket} />
       ) : (
         <div className={YEOUN_TICKET_SLOT}>
           <section className={YEOUN_TICKET_FORM_CARD}>

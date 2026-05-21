@@ -4,7 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { resolveAuthDisplayName, ensureLoggedIn } from "@/lib/auth/session";
 import { loadUserProfile } from "@/lib/profile/user-profile";
-import { loadUserTickets } from "@/lib/tickets/user-tickets";
+import { deleteUserTicket, loadUserTickets } from "@/lib/tickets/user-tickets";
 import type { StoredTicket } from "@/lib/tickets/storage";
 import {
   YEOUN_AVATAR,
@@ -17,6 +17,11 @@ import {
   YEOUN_TICKET,
   yeounFont,
 } from "@/lib/ui/yeoun-scale";
+import {
+  FlowButtonRow,
+  FlowPrimaryHalf,
+  FlowSecondaryHalf,
+} from "../create/_shared/FlowButtons";
 import { gradientFromEmotionParam } from "../create/_shared/ticket-gradient";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
@@ -36,7 +41,34 @@ function MainContent() {
   const [tickets, setTickets] = useState<StoredTicket[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [showBack, setShowBack] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{
+    ticket: StoredTicket;
+    idx: number;
+  } | null>(null);
   const isDraggingRef = useRef(false);
+
+  const ticketKey = (ticket: StoredTicket, idx: number) =>
+    ticket.supabaseId ?? String(ticket.id ?? idx);
+
+  const handleDeleteTicket = async (ticket: StoredTicket, idx: number) => {
+    const key = ticketKey(ticket, idx);
+    if (deletingId === key) return;
+    setDeletingId(key);
+    try {
+      const next = await deleteUserTicket(ticket);
+      setTickets(next);
+      setActiveIndex((prev) => {
+        if (next.length === 0) return 0;
+        if (prev >= next.length) return next.length - 1;
+        return prev;
+      });
+      setShowBack(false);
+      setPendingDelete(null);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -121,19 +153,32 @@ function MainContent() {
                   const isBack = showBack && idx === activeIndex;
                   const bg = gradientFromEmotionParam(ticket.emotions || null);
                   return (
-                    <SwiperSlide key={ticket.id ?? idx}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (isDraggingRef.current) return;
-                          if (idx !== activeIndex) return;
-                          if (ticket.backImage) setShowBack((prev) => !prev);
-                        }}
-                        className={`flex h-[min(430px,40dvh)] min-h-[270px] w-full flex-col items-center justify-center overflow-hidden rounded-[14px] border border-[#ece8e1] bg-white text-center shadow-[0_12px_24px_rgba(0,0,0,0.2)] ${
-                          !isBack || !ticket.backImage ? "px-[6cqw]" : ""
-                        }`}
-                        style={!isBack ? { backgroundImage: bg } : undefined}
-                      >
+                    <SwiperSlide key={ticketKey(ticket, idx)}>
+                      <div className="relative h-[min(430px,40dvh)] min-h-[270px] w-full">
+                        <button
+                          type="button"
+                          aria-label="티켓 삭제"
+                          disabled={deletingId === ticketKey(ticket, idx)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPendingDelete({ ticket, idx });
+                          }}
+                          className={`absolute right-[2.4cqw] top-[2.4cqw] z-10 flex min-h-[32px] min-w-[32px] items-center justify-center p-[0.6cqw] text-[#FDAFC7]/40 transition-colors hover:text-[#FDAFC7] active:scale-95 disabled:opacity-30 ${YEOUN_TEXT.back}`}
+                        >
+                          ×
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isDraggingRef.current) return;
+                            if (idx !== activeIndex) return;
+                            if (ticket.backImage) setShowBack((prev) => !prev);
+                          }}
+                          className={`flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-[14px] border border-[#ece8e1] bg-white text-center shadow-[0_12px_24px_rgba(0,0,0,0.2)] ${
+                            !isBack || !ticket.backImage ? "px-[6cqw]" : ""
+                          }`}
+                          style={!isBack ? { backgroundImage: bg } : undefined}
+                        >
                         {!isBack || !ticket.backImage ? (
                           <div className="flex h-full w-full flex-col items-center justify-center">
                             <p className={YEOUN_TICKET.label}>
@@ -166,7 +211,8 @@ function MainContent() {
                             className="h-full w-full rounded-[14px] object-cover"
                           />
                         )}
-                      </button>
+                        </button>
+                      </div>
                     </SwiperSlide>
                   );
                 })}
@@ -187,6 +233,47 @@ function MainContent() {
           >
             새로운 여운 기록하기
           </button>
+
+          {pendingDelete ? (
+            <div
+              className="absolute inset-0 z-50 flex flex-col overflow-hidden bg-[#FFFFF5]/96"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="delete-ticket-title"
+            >
+              <div className="flex flex-1 flex-col items-center justify-center px-[6.2cqw]">
+                <p
+                  id="delete-ticket-title"
+                  className={`text-center ${YEOUN_TEXT.title} text-[#3c3c3c]`}
+                >
+                  해당 티켓을 삭제하겠습니까?
+                </p>
+              </div>
+              <div className="shrink-0 pb-[4.8cqh]">
+                <FlowButtonRow>
+                  <FlowPrimaryHalf
+                    type="button"
+                    disabled={deletingId !== null}
+                    onClick={() =>
+                      void handleDeleteTicket(
+                        pendingDelete.ticket,
+                        pendingDelete.idx
+                      )
+                    }
+                  >
+                    삭제하기
+                  </FlowPrimaryHalf>
+                  <FlowSecondaryHalf
+                    type="button"
+                    disabled={deletingId !== null}
+                    onClick={() => setPendingDelete(null)}
+                  >
+                    이전
+                  </FlowSecondaryHalf>
+                </FlowButtonRow>
+              </div>
+            </div>
+          ) : null}
         </section>
       </main>
     </div>

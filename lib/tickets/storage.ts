@@ -2,6 +2,8 @@ import { compressDataUrl } from "@/lib/image/compress-data-url";
 
 export type StoredTicket = {
   id?: number;
+  /** Supabase yeoun_tickets.id (로그인 사용자 원격 삭제용) */
+  supabaseId?: string;
   emotions: string;
   quote: string;
   backImage: string;
@@ -24,6 +26,24 @@ function parseTicket(item: Partial<StoredTicket>, idx: number): StoredTicket {
     day: item.day,
     venue: item.venue,
   };
+}
+
+function ticketsMatch(a: StoredTicket, b: StoredTicket): boolean {
+  if (a.supabaseId && b.supabaseId) return a.supabaseId === b.supabaseId;
+  if (a.id != null && b.id != null) return a.id === b.id;
+  return (
+    a.emotions === b.emotions &&
+    a.quote === b.quote &&
+    a.backImage === b.backImage
+  );
+}
+
+/** sessionStorage에서 티켓 제거 후 남은 목록 반환 */
+export function removeStoredTicket(target: StoredTicket): StoredTicket[] {
+  const list = loadStoredTickets();
+  const next = list.filter((t) => !ticketsMatch(t, target));
+  writeTicketsCache(next);
+  return next;
 }
 
 export function writeTicketsCache(list: StoredTicket[]) {

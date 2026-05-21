@@ -43,3 +43,7 @@ drop policy if exists "yeoun_profiles_update_own" on public.yeoun_profiles;
 create policy "yeoun_profiles_update_own"
   on public.yeoun_profiles for update
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "yeoun_tickets_delete_own" on public.yeoun_tickets;
+create policy "yeoun_tickets_delete_own"
+  on public.yeoun_tickets for delete using (auth.uid() = user_id);

@@ -73,6 +73,25 @@ export async function saveTicketToSupabase(
   return { ok: !error };
 }
 
+export async function deleteTicketFromSupabase(
+  supabaseId: string
+): Promise<boolean> {
+  const userId = await getCurrentUserId();
+  if (!userId || !supabaseId) return false;
+
+  const { error } = await getSupabase()
+    .from("yeoun_tickets")
+    .delete()
+    .eq("id", supabaseId)
+    .eq("user_id", userId);
+
+  if (error && process.env.NODE_ENV === "development") {
+    console.warn("[yeoun] deleteTicketFromSupabase:", error.message);
+  }
+
+  return !error;
+}
+
 function isMissingColumnError(message: string) {
   const lower = message.toLowerCase();
   return (
@@ -85,6 +104,7 @@ function isMissingColumnError(message: string) {
 export function mapYeounTicketRowToStoredTicket(row: YeounTicketRow): StoredTicket {
   const createdMs = new Date(row.created_at).getTime();
   return {
+    supabaseId: row.id,
     id: Number.isNaN(createdMs) ? undefined : createdMs,
     emotions: row.emotions ?? "",
     quote: row.quote ?? "",
