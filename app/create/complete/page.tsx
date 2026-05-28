@@ -1,7 +1,13 @@
 "use client";
 
 import { CreateFlowShell } from "../_shared/CreateFlowShell";
-import { FlowButtonRow, FlowPrimaryHalf, FlowSecondaryHalf } from "../_shared/FlowButtons";
+import {
+  FlowButtonRow,
+  FlowOutlineButton,
+  FlowPrimaryHalf,
+  FlowSecondaryHalf,
+} from "../_shared/FlowButtons";
+import { saveTicketToGallery } from "@/lib/ticket/save-ticket-image";
 import { TicketFrontContent } from "../_shared/TicketFrontContent";
 import { clearTicketDraft, loadTicketDraft } from "@/lib/ticket/draft-storage";
 import {
@@ -28,7 +34,10 @@ function CompleteContent() {
   const [registration, setRegistration] = useState(loadTicketDraft());
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareHint, setShareHint] = useState("");
   const saveStartedRef = useRef(false);
+  const ticketCaptureRef = useRef<HTMLDivElement>(null);
 
   const emotionsParam = searchParams.get("emotions");
   const quote = searchParams.get("quote")?.trim() ?? "";
@@ -79,6 +88,29 @@ function CompleteContent() {
     router.push("/main");
   };
 
+  const handleShareToGallery = async () => {
+    const node = ticketCaptureRef.current;
+    if (!node || isSharing || isSaving) return;
+
+    setIsSharing(true);
+    setShareHint("");
+
+    const result = await saveTicketToGallery(node);
+
+    setIsSharing(false);
+
+    if (!result.ok) {
+      setShareHint(result.error);
+      return;
+    }
+
+    if (result.method === "share") {
+      setShareHint("공유 메뉴에서 「사진에 저장」을 선택해 주세요.");
+    } else {
+      setShareHint("이미지를 저장했어요. 갤러리 또는 다운로드 폴더를 확인해 주세요.");
+    }
+  };
+
   return (
     <CreateFlowShell
       title={
@@ -107,19 +139,39 @@ function CompleteContent() {
               {isSaving ? "저장 중..." : "저장하기"}
             </FlowPrimaryHalf>
           </FlowButtonRow>
+          <FlowOutlineButton
+            type="button"
+            onClick={() => void handleShareToGallery()}
+            disabled={isSaving || isSharing}
+            className="disabled:opacity-60"
+          >
+            {isSharing ? "이미지 만드는 중..." : "갤러리에 저장"}
+          </FlowOutlineButton>
           {saveError ? (
             <p className={`text-center ${YEOUN_TEXT.bodyMedium} text-[#b14d70]`}>{saveError}</p>
+          ) : null}
+          {shareHint ? (
+            <p className={`text-center ${YEOUN_MUTED}`}>{shareHint}</p>
           ) : null}
         </>
       }
     >
       <div className={YEOUN_TICKET_SLOT}>
-        <button
-          type="button"
+        <div
+          ref={ticketCaptureRef}
+          role={backImage ? "button" : undefined}
+          tabIndex={backImage ? 0 : undefined}
           onClick={() => {
             if (backImage) setShowBack((prev) => !prev);
           }}
-          className={`${YEOUN_TICKET_CARD} p-0`}
+          onKeyDown={(e) => {
+            if (!backImage) return;
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setShowBack((prev) => !prev);
+            }
+          }}
+          className={`${YEOUN_TICKET_CARD} p-0 ${backImage ? "cursor-pointer" : ""}`}
           style={!showBack || !backImage ? { backgroundImage: ticketBackground } : undefined}
         >
           {!showBack || !backImage ? (
@@ -137,7 +189,7 @@ function CompleteContent() {
               className="h-full w-full rounded-[14px] object-cover"
             />
           )}
-        </button>
+        </div>
       </div>
     </CreateFlowShell>
   );

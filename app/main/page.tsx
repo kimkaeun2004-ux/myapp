@@ -176,7 +176,7 @@ function MainContent() {
                             e.stopPropagation();
                             setPendingDelete({ ticket, idx });
                           }}
-                          className={`absolute right-[2.4cqw] top-[2.4cqw] z-10 flex min-h-[32px] min-w-[32px] items-center justify-center p-[0.6cqw] text-[#FDAFC7]/40 transition-colors hover:text-[#FDAFC7] active:scale-95 disabled:opacity-30 ${YEOUN_TEXT.back}`}
+                          className={`absolute right-[2.4cqw] top-[2.4cqw] z-10 flex min-h-[32px] min-w-[32px] items-center justify-center p-[0.6cqw] text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)] transition-opacity hover:opacity-90 active:scale-95 disabled:opacity-40 ${YEOUN_TEXT.back}`}
                         >
                           ×
                         </button>
