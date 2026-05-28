@@ -6,6 +6,8 @@ import {
   getCachedUserName,
   isGuestLoggedIn,
 } from "@/lib/auth/storage";
+import { clearLocalDataForAccountSwitch } from "@/lib/auth/account-local";
+import { clearLegacyProfileStorage } from "@/lib/profile/storage";
 import { getSupabase } from "@/lib/supabase/client";
 import type { Session } from "@supabase/supabase-js";
 
@@ -63,6 +65,7 @@ export async function resolveAuthDisplayName() {
     return name;
   }
 
+  // 로그인 세션이 없을 때만 캐시 이름 사용 (다른 계정 프로필 섞임 방지)
   return getCachedUserName() || "회원";
 }
 
@@ -84,6 +87,7 @@ export async function ensureLoggedIn(routerReplace: (path: string) => void) {
 export async function signOutUser(routerReplace?: (path: string) => void) {
   clearGuestLoggedIn();
   clearUserAuthCache();
+  clearLocalDataForAccountSwitch();
   try {
     await getSupabase().auth.signOut();
   } catch {

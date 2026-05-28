@@ -1,6 +1,6 @@
 "use client";
 
-import { ensureLoggedIn, resolveAuthDisplayName } from "@/lib/auth/session";
+import { ensureLoggedIn } from "@/lib/auth/session";
 import { DEFAULT_AVATAR } from "@/lib/profile/storage";
 import {
   loadUserProfile,
@@ -50,8 +50,7 @@ export default function ProfilePage() {
       const ok = await ensureLoggedIn(router.replace);
       if (!ok) return;
 
-      const fallback = await resolveAuthDisplayName();
-      const profile = await loadUserProfile(fallback);
+      const profile = await loadUserProfile();
       setDisplayName(profile.displayName);
       setDraftName(profile.displayName);
       setAvatarUrl(profile.avatarUrl);

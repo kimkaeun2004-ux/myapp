@@ -1,8 +1,10 @@
 "use client";
 
 import { displayNameFromEmail, signInOrSignUpWithEmail } from "@/lib/auth/email";
-import { cacheUserAuth } from "@/lib/auth/storage";
-import { ensureRemoteProfile } from "@/lib/profile/user-profile";
+import { trackEvent } from "@/lib/analytics/client";
+import { clearLocalDataForAccountSwitch } from "@/lib/auth/account-local";
+import { cacheUserAuth, getCachedUserEmail } from "@/lib/auth/storage";
+import { clearLegacyProfileStorage } from "@/lib/profile/storage";
 import { syncLocalTicketsToSupabase } from "@/lib/tickets/supabase-tickets";
 import {
   YEOUN_BTN,
@@ -55,12 +57,25 @@ export default function EmailLoginPage() {
         return;
       }
 
-      const userEmail = session.user.email ?? email.trim();
+      const userEmail = (session.user.email ?? email.trim()).trim().toLowerCase();
+      const previousEmail = getCachedUserEmail();
+
+      if (previousEmail && previousEmail !== userEmail) {
+        clearLocalDataForAccountSwitch();
+      } else {
+        clearLegacyProfileStorage();
+      }
+
       cacheUserAuth(userEmail, displayNameFromEmail(userEmail));
+
+      await trackEvent({
+        eventName: "email_login_success",
+        userId: session.user.id,
+        path: "/login/email",
+      });
 
       try {
         await syncLocalTicketsToSupabase();
-        await ensureRemoteProfile(displayNameFromEmail(session.user.email ?? email));
       } catch {
         // Supabase 미설정·오프라인 시 로컬만 사용
       }

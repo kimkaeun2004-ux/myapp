@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { resolveAuthDisplayName, ensureLoggedIn } from "@/lib/auth/session";
+import { ensureLoggedIn, signOutUser } from "@/lib/auth/session";
 import { loadUserProfile } from "@/lib/profile/user-profile";
 import { deleteUserTicket, loadUserTickets } from "@/lib/tickets/user-tickets";
 import type { StoredTicket } from "@/lib/tickets/storage";
@@ -12,6 +12,7 @@ import {
   YEOUN_BTN,
   YEOUN_CONTENT_W,
   YEOUN_HOME_CTA,
+  YEOUN_HOME_LOGOUT,
   YEOUN_PAGE_MAIN,
   YEOUN_SCREEN,
   YEOUN_SHELL_SECTION,
@@ -49,10 +50,21 @@ function MainContent() {
     ticket: StoredTicket;
     idx: number;
   } | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const isDraggingRef = useRef(false);
 
   const ticketKey = (ticket: StoredTicket, idx: number) =>
     ticket.supabaseId ?? String(ticket.id ?? idx);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    try {
+      await signOutUser(router.replace);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   const handleDeleteTicket = async (ticket: StoredTicket, idx: number) => {
     const key = ticketKey(ticket, idx);
@@ -80,8 +92,7 @@ function MainContent() {
       const ok = await ensureLoggedIn(router.replace);
       if (!ok) return;
 
-      const fallback = await resolveAuthDisplayName();
-      const profile = await loadUserProfile(fallback);
+      const profile = await loadUserProfile();
       setUserName(profile.displayName);
       setAvatarUrl(profile.avatarUrl || null);
       setTickets(await loadUserTickets());
@@ -246,6 +257,15 @@ function MainContent() {
             className={YEOUN_HOME_CTA}
           >
             새로운 여운 기록하기
+          </button>
+
+          <button
+            type="button"
+            onClick={() => void handleLogout()}
+            disabled={isLoggingOut}
+            className={YEOUN_HOME_LOGOUT}
+          >
+            {isLoggingOut ? "로그아웃 중..." : "로그아웃"}
           </button>
 
           {pendingDelete ? (

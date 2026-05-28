@@ -1,7 +1,9 @@
 "use client";
 
 import { setGuestLoggedIn } from "@/lib/auth/storage";
+import { trackEvent } from "@/lib/analytics/client";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import {
   YEOUN_CONTENT_W,
   YEOUN_PAGE_MAIN,
@@ -15,9 +17,24 @@ import {
 export default function OnboardingPage() {
   const router = useRouter();
 
+  useEffect(() => {
+    void trackEvent({
+      eventName: "onboarding_view",
+      path: "/",
+    });
+  }, []);
+
   const handleGuestLogin = () => {
     setGuestLoggedIn();
     router.push("/main");
+  };
+
+  const handleEmailStart = async () => {
+    await trackEvent({
+      eventName: "email_start_click",
+      path: "/",
+    });
+    router.push("/login/email");
   };
 
   const btnClass = `${YEOUN_BTN} w-full border-[#F3B4C8] bg-white`;
@@ -34,7 +51,7 @@ export default function OnboardingPage() {
           <div className={`mt-[11.6cqh] flex ${YEOUN_CONTENT_W} flex-col gap-[1.3cqh]`}>
             <button
               type="button"
-              onClick={() => router.push("/login/email")}
+              onClick={() => void handleEmailStart()}
               className={`${btnClass} text-[#2c2c2c] transition hover:bg-[#fff8fb] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f3b4c8]/70`}
             >
               이메일로 시작

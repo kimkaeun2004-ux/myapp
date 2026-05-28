@@ -71,6 +71,19 @@ export function clearUserAuthCache(): void {
   }
 }
 
+export function getCachedUserEmail(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    return (
+      window.localStorage.getItem(USER_EMAIL_KEY)?.trim().toLowerCase() ||
+      window.sessionStorage.getItem(USER_EMAIL_KEY)?.trim().toLowerCase() ||
+      ""
+    );
+  } catch {
+    return "";
+  }
+}
+
 export function getCachedUserName(): string {
   if (typeof window === "undefined") return "";
   try {

@@ -50,6 +50,9 @@ export const YEOUN_AVATAR =
 /** 메인 홈 CTA — 새로운 여운 기록하기 (기본 버튼보다 글자 크게) */
 export const YEOUN_HOME_CTA = `mx-auto block ${YEOUN_BLOCK_GAP} flex h-[min(72px,7.8dvh)] min-h-[52px] ${YEOUN_CONTENT_W} items-center justify-center rounded-[2cqw] border border-[#FDAFC7] bg-[#FDAFC7] text-[3.9cqw] font-bold tracking-[-0.01em] text-[#131313] shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition hover:bg-[#f99fbe] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50`;
 
+/** 메인 홈 로그아웃 — 배경과 비슷하게, 글자는 또렷하게 */
+export const YEOUN_HOME_LOGOUT = `mx-auto block ${YEOUN_BLOCK_GAP} ${YEOUN_CONTENT_W} w-full bg-transparent py-[1.2cqh] text-center text-[3.1cqw] font-semibold tracking-[-0.01em] text-[#7a5c68] underline decoration-[#d4a8b8] decoration-1 underline-offset-[0.35em] transition hover:text-[#5c3f4a] hover:decoration-[#c892a6] active:opacity-75 disabled:opacity-50`;
+
 /** 메인 홈 보조 버튼 — 감정 리포트 요약 보기 */
 export const YEOUN_HOME_BTN_OUTLINE = `mx-auto block ${YEOUN_BLOCK_GAP} ${YEOUN_BTN} ${YEOUN_CONTENT_W} border-[#FDAFC7] bg-[#ffffff] text-[#3c3c3c] transition hover:bg-[#fffcef] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50`;
 
