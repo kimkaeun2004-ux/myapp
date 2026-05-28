@@ -18,7 +18,7 @@ import {
   YEOUN_PAGE_MAIN,
   YEOUN_SCREEN,
   YEOUN_SHELL_SECTION,
-  YEOUN_NAV_BACK_FLOW,
+  YEOUN_NAV_BACK_PAGE,
   YEOUN_TEXT,
   YEOUN_TICKET,
   yeounFont,
@@ -80,16 +80,19 @@ function EmotionReportContent() {
     <div className={YEOUN_SCREEN} style={yeounFont}>
       <main className={YEOUN_PAGE_MAIN}>
         <section className={`${YEOUN_SHELL_SECTION} overflow-hidden`}>
-          <button
-            type="button"
-            onClick={() => router.push("/main")}
-            className={YEOUN_NAV_BACK_FLOW}
-            aria-label="뒤로"
-          >
-            ‹
-          </button>
+          <header className="relative shrink-0">
+            <h1 className={`mt-[5.4cqh] text-center ${YEOUN_TEXT.brandHome}`}>YEOUN</h1>
+            <button
+              type="button"
+              onClick={() => router.push("/main")}
+              className={YEOUN_NAV_BACK_PAGE}
+              aria-label="뒤로"
+            >
+              ‹
+            </button>
+          </header>
 
-          <h1 className={`mt-[5.2cqh] text-center ${YEOUN_TEXT.title}`}>감정 리포트</h1>
+          <h2 className={`mt-[5.2cqh] text-center ${YEOUN_TEXT.title}`}>감정 리포트</h2>
 
           <p className={`mx-auto ${YEOUN_CONTENT_W} px-[2cqw] text-center ${YEOUN_MUTED} ${YEOUN_BLOCK_GAP}`}>
             {subtitle}

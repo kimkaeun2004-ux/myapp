@@ -21,11 +21,13 @@ export const YEOUN_TEXT = {
   body: "text-[3.1cqw] font-bold tracking-[-0.01em]",
   bodyMedium: "text-[3.1cqw] font-medium tracking-[-0.01em]",
   back: "text-[4.3cqw] font-semibold leading-none text-[#F3B4C8]",
-  /** 상단 뒤로가기·닫기 — 기존 back보다 크게 */
-  backNav: "text-[5.8cqw] font-semibold leading-none text-[#F3B4C8]",
+  /** 상단 뒤로가기 ‹ */
+  backNav: "text-[7.2cqw] font-semibold leading-none text-[#F3B4C8]",
+  /** 플로우 닫기 × */
+  closeNav: "text-[5.8cqw] font-semibold leading-none text-[#F3B4C8]",
 } as const;
 
-const yeounNavBackBase = `inline-flex min-h-[48px] min-w-[48px] items-center justify-center ${YEOUN_TEXT.backNav} transition hover:opacity-80 active:scale-95`;
+const yeounNavBackBase = `inline-flex min-h-[56px] min-w-[56px] items-center justify-center ${YEOUN_TEXT.backNav} transition hover:opacity-80 active:scale-95`;
 
 /** 이메일 로그인 — 좌상단 절대 위치 */
 export const YEOUN_NAV_BACK_EMAIL = `absolute left-[6cqw] top-[6cqh] z-10 ${yeounNavBackBase}`;
@@ -33,11 +35,8 @@ export const YEOUN_NAV_BACK_EMAIL = `absolute left-[6cqw] top-[6cqh] z-10 ${yeou
 /** 프로필·리포트 — 상단 좌측 (기존 mt/px와 동일한 시각 위치) */
 export const YEOUN_NAV_BACK_PAGE = `absolute left-0 top-[5.4cqh] z-10 px-[6.2cqw] text-left ${yeounNavBackBase}`;
 
-/** 문서 흐름 상단 좌측 (리포트 등) */
-export const YEOUN_NAV_BACK_FLOW = `mt-[5.4cqh] px-[6.2cqw] text-left ${yeounNavBackBase}`;
-
 /** × 닫기 — 새 여운 기록 플로우 */
-export const YEOUN_NAV_CLOSE_BTN = `inline-flex min-h-[48px] min-w-[48px] items-center justify-center ${YEOUN_TEXT.backNav} transition hover:opacity-80 active:scale-95`;
+export const YEOUN_NAV_CLOSE_BTN = `inline-flex min-h-[48px] min-w-[48px] items-center justify-center ${YEOUN_TEXT.closeNav} transition hover:opacity-80 active:scale-95`;
 
 export const YEOUN_BTN =
   "flex h-[min(72px,7.8dvh)] min-h-[52px] items-center justify-center rounded-[2cqw] border text-[3.1cqw] font-bold tracking-[-0.01em]";
@@ -48,8 +47,8 @@ export const YEOUN_BLOCK_GAP = "mt-[3.2cqh]";
 export const YEOUN_AVATAR =
   "flex h-[16cqw] w-[16cqw] shrink-0 items-center justify-center overflow-hidden rounded-[2cqw] bg-[#ece9df] text-[4cqw] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]";
 
-/** 메인 홈 CTA — 새로운 여운 기록하기 */
-export const YEOUN_HOME_CTA = `mx-auto block ${YEOUN_BLOCK_GAP} ${YEOUN_BTN} ${YEOUN_CONTENT_W} border-[#FDAFC7] bg-[#FDAFC7] text-[#131313] shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition hover:bg-[#f99fbe] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50`;
+/** 메인 홈 CTA — 새로운 여운 기록하기 (기본 버튼보다 글자 크게) */
+export const YEOUN_HOME_CTA = `mx-auto block ${YEOUN_BLOCK_GAP} flex h-[min(72px,7.8dvh)] min-h-[52px] ${YEOUN_CONTENT_W} items-center justify-center rounded-[2cqw] border border-[#FDAFC7] bg-[#FDAFC7] text-[3.9cqw] font-bold tracking-[-0.01em] text-[#131313] shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition hover:bg-[#f99fbe] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50`;
 
 /** 메인 홈 보조 버튼 — 감정 리포트 요약 보기 */
 export const YEOUN_HOME_BTN_OUTLINE = `mx-auto block ${YEOUN_BLOCK_GAP} ${YEOUN_BTN} ${YEOUN_CONTENT_W} border-[#FDAFC7] bg-[#ffffff] text-[#3c3c3c] transition hover:bg-[#fffcef] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50`;
@@ -93,7 +92,7 @@ export const YEOUN_FLOW_BTN_PRIMARY = YEOUN_HOME_BTN_HALF_PRIMARY;
 export const YEOUN_FLOW_BTN_SECONDARY = YEOUN_HOME_BTN_HALF_SECONDARY;
 export const YEOUN_FLOW_BTN_SINGLE = YEOUN_HOME_CTA;
 export const YEOUN_FLOW_BTN_WIDE = YEOUN_HOME_CTA;
-export const YEOUN_FLOW_CLOSE = `ml-auto block px-[6.2cqw] pt-[5.4cqh] pr-[3.6cqw] text-right ${YEOUN_TEXT.backNav} transition hover:opacity-80`;
+export const YEOUN_FLOW_CLOSE = `ml-auto block px-[6.2cqw] pt-[5.4cqh] pr-[3.6cqw] text-right ${YEOUN_TEXT.closeNav} transition hover:opacity-80`;
 export const YEOUN_LABEL = YEOUN_CONFIRM_LABEL;
 export const YEOUN_INPUT = YEOUN_CONFIRM_INPUT;
 export const YEOUN_TICKET_FORM_CARD_LEGACY = YEOUN_TICKET_FORM_CARD;

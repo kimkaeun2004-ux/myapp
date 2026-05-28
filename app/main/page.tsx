@@ -11,6 +11,7 @@ import {
   YEOUN_BLOCK_GAP,
   YEOUN_BTN,
   YEOUN_CONTENT_W,
+  YEOUN_HOME_CTA,
   YEOUN_PAGE_MAIN,
   YEOUN_SCREEN,
   YEOUN_SHELL_SECTION,
@@ -242,7 +243,7 @@ function MainContent() {
           <button
             type="button"
             onClick={() => router.push("/create/scan")}
-            className={`mx-auto ${YEOUN_BLOCK_GAP} ${YEOUN_BTN} ${YEOUN_CONTENT_W} border-[#FDAFC7] bg-[#FDAFC7] text-[#131313] shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition hover:bg-[#f99fbe] active:scale-[0.99]`}
+            className={YEOUN_HOME_CTA}
           >
             새로운 여운 기록하기
           </button>
