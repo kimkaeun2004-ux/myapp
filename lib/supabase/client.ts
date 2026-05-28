@@ -1,4 +1,5 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type SupabasePublicConfig = {
   projectId: string;
@@ -82,7 +83,7 @@ export function getSupabase(): SupabaseClient {
   assertSupabaseConfig(config);
 
   if (!cachedClient) {
-    cachedClient = createClient(config.supabaseUrl, config.supabaseAnonKey);
+    cachedClient = createBrowserClient(config.supabaseUrl, config.supabaseAnonKey);
   }
 
   return cachedClient;

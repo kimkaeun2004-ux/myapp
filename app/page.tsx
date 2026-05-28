@@ -1,8 +1,10 @@
 "use client";
 
+import { setGuestLoggedIn } from "@/lib/auth/storage";
 import { useRouter } from "next/navigation";
 import {
   YEOUN_CONTENT_W,
+  YEOUN_PAGE_MAIN,
   YEOUN_SCREEN,
   YEOUN_SHELL_SECTION,
   YEOUN_TEXT,
@@ -14,9 +16,7 @@ export default function OnboardingPage() {
   const router = useRouter();
 
   const handleGuestLogin = () => {
-    if (typeof window !== "undefined") {
-      window.sessionStorage.setItem("yeounGuestLoggedIn", "true");
-    }
+    setGuestLoggedIn();
     router.push("/main");
   };
 
@@ -24,7 +24,7 @@ export default function OnboardingPage() {
 
   return (
     <div className={YEOUN_SCREEN} style={yeounFont}>
-      <main className="mx-auto flex h-full w-full items-center justify-center overflow-hidden">
+      <main className={YEOUN_PAGE_MAIN}>
         <section className={`${YEOUN_SHELL_SECTION} items-center`}>
           <h1 className={`mt-[20.4cqh] text-center ${YEOUN_TEXT.brand}`}>YEOUN</h1>
           <p className={`mt-[1.9cqh] text-center ${YEOUN_TEXT.title}`}>
@@ -32,12 +32,6 @@ export default function OnboardingPage() {
           </p>
 
           <div className={`mt-[11.6cqh] flex ${YEOUN_CONTENT_W} flex-col gap-[1.3cqh]`}>
-            <button type="button" disabled className={`${btnClass} text-[#6f6f6f]`}>
-              구글 계정으로 시작
-            </button>
-            <button type="button" disabled className={`${btnClass} text-[#6f6f6f]`}>
-              애플 계정으로 시작
-            </button>
             <button
               type="button"
               onClick={() => router.push("/login/email")}

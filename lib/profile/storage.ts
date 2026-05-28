@@ -1,3 +1,5 @@
+import { getCachedUserName, isGuestLoggedIn } from "@/lib/auth/storage";
+
 const PROFILE_KEY = "yeounProfile";
 
 export type UserProfile = {
@@ -13,7 +15,9 @@ export function loadUserProfile(fallbackName: string): UserProfile {
   }
 
   try {
-    const raw = window.sessionStorage.getItem(PROFILE_KEY);
+    const raw =
+      window.localStorage.getItem(PROFILE_KEY) ||
+      window.sessionStorage.getItem(PROFILE_KEY);
     if (!raw) {
       return { displayName: fallbackName, avatarUrl: DEFAULT_AVATAR };
     }
@@ -29,16 +33,18 @@ export function loadUserProfile(fallbackName: string): UserProfile {
 
 export function saveUserProfile(profile: UserProfile) {
   if (typeof window === "undefined") return;
-  window.sessionStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  const json = JSON.stringify(profile);
+  window.localStorage.setItem(PROFILE_KEY, json);
+  window.sessionStorage.setItem(PROFILE_KEY, json);
+  window.localStorage.setItem("yeounUserName", profile.displayName);
   window.sessionStorage.setItem("yeounUserName", profile.displayName);
 }
 
 export function resolveFallbackDisplayName() {
   if (typeof window === "undefined") return "게스트";
 
-  const fromProfile = window.sessionStorage.getItem("yeounUserName");
-  if (fromProfile?.trim()) return fromProfile.trim();
+  const fromProfile = getCachedUserName();
+  if (fromProfile) return fromProfile;
 
-  const isGuest = window.sessionStorage.getItem("yeounGuestLoggedIn") === "true";
-  return isGuest ? "게스트" : "회원";
+  return isGuestLoggedIn() ? "게스트" : "회원";
 }

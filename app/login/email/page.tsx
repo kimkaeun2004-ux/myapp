@@ -1,6 +1,7 @@
 "use client";
 
 import { displayNameFromEmail, signInOrSignUpWithEmail } from "@/lib/auth/email";
+import { cacheUserAuth } from "@/lib/auth/storage";
 import { ensureRemoteProfile } from "@/lib/profile/user-profile";
 import { syncLocalTicketsToSupabase } from "@/lib/tickets/supabase-tickets";
 import {
@@ -8,8 +9,10 @@ import {
   YEOUN_CONTENT_W,
   YEOUN_INPUT,
   YEOUN_LABEL,
+  YEOUN_PAGE_MAIN,
   YEOUN_SCREEN,
   YEOUN_SHELL_SECTION,
+  YEOUN_NAV_BACK_EMAIL,
   YEOUN_TEXT,
   yeounFont,
 } from "@/lib/ui/yeoun-scale";
@@ -52,13 +55,8 @@ export default function EmailLoginPage() {
         return;
       }
 
-      if (typeof window !== "undefined") {
-        window.sessionStorage.removeItem("yeounGuestLoggedIn");
-        const userEmail = session.user.email ?? email.trim();
-        const displayName = displayNameFromEmail(userEmail);
-        window.sessionStorage.setItem("yeounUserEmail", userEmail);
-        window.sessionStorage.setItem("yeounUserName", displayName);
-      }
+      const userEmail = session.user.email ?? email.trim();
+      cacheUserAuth(userEmail, displayNameFromEmail(userEmail));
 
       try {
         await syncLocalTicketsToSupabase();
@@ -79,14 +77,15 @@ export default function EmailLoginPage() {
 
   return (
     <div className={YEOUN_SCREEN} style={yeounFont}>
-      <main className="mx-auto flex h-full w-full items-center justify-center overflow-hidden">
+      <main className={YEOUN_PAGE_MAIN}>
         <section className={`${YEOUN_SHELL_SECTION} items-center`}>
           <button
             type="button"
             onClick={() => router.push("/")}
-            className={`absolute left-[6cqw] top-[6cqh] ${YEOUN_TEXT.back}`}
+            className={YEOUN_NAV_BACK_EMAIL}
+            aria-label="뒤로"
           >
-            ←
+            ‹
           </button>
 
           <h1 className={`mt-[20.4cqh] text-center ${YEOUN_TEXT.brand}`}>YEOUN</h1>

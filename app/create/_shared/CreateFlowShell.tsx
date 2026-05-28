@@ -3,8 +3,10 @@
 import {
   YEOUN_BLOCK_GAP,
   YEOUN_MUTED,
+  YEOUN_PAGE_MAIN,
   YEOUN_SCREEN,
   YEOUN_SHELL_SECTION,
+  YEOUN_NAV_CLOSE_BTN,
   YEOUN_TEXT,
   yeounFont,
 } from "@/lib/ui/yeoun-scale";
@@ -32,18 +34,20 @@ export function CreateFlowShell({
 
   return (
     <div className={YEOUN_SCREEN} style={yeounFont}>
-      <main className="mx-auto flex h-full w-full items-center justify-center overflow-hidden">
+      <main className={YEOUN_PAGE_MAIN}>
         <section className={`${YEOUN_SHELL_SECTION} overflow-hidden`}>
           <div className="relative shrink-0 px-[6.2cqw] pt-[5.4cqh]">
-            <button
-              type="button"
-              onClick={handleClose}
-              className={`absolute right-0 top-0 ${YEOUN_TEXT.back} transition hover:opacity-80`}
-              aria-label="닫기"
-            >
-              ×
-            </button>
-            <h1 className={`text-center ${YEOUN_TEXT.title}`}>{title}</h1>
+            <div className="flex justify-end pr-[3.6cqw]">
+              <button
+                type="button"
+                onClick={handleClose}
+                className={YEOUN_NAV_CLOSE_BTN}
+                aria-label="닫기"
+              >
+                ×
+              </button>
+            </div>
+            <h1 className={`mt-[0.8cqh] text-center ${YEOUN_TEXT.title}`}>{title}</h1>
             {subtitle ? (
               <p className={`mt-[1.6cqh] text-center ${YEOUN_MUTED}`}>{subtitle}</p>
             ) : null}

@@ -1,40 +1,93 @@
 import { displayNameFromEmail } from "@/lib/auth/email";
-import { supabase } from "@/lib/supabase/client";
+import {
+  cacheUserAuth,
+  clearGuestLoggedIn,
+  clearUserAuthCache,
+  getCachedUserName,
+  isGuestLoggedIn,
+} from "@/lib/auth/storage";
+import { getSupabase } from "@/lib/supabase/client";
+import type { Session } from "@supabase/supabase-js";
+
+function syncAuthCacheFromSession(session: Session) {
+  const email = session.user.email;
+  if (!email) return;
+  cacheUserAuth(email, displayNameFromEmail(email));
+}
+
+/**
+ * Supabase가 localStorage/쿠키에서 세션을 읽기 전에 getSession()이 null이 되는 경우 방지
+ */
+export async function waitForAuthSession(): Promise<Session | null> {
+  const supabase = getSupabase();
+
+  const { data: initial } = await supabase.auth.getSession();
+  if (initial.session) return initial.session;
+
+  return new Promise((resolve) => {
+    let settled = false;
+
+    const finish = (session: Session | null) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      subscription.unsubscribe();
+      resolve(session);
+    };
+
+    const timer = setTimeout(() => finish(null), 4000);
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (
+        event === "INITIAL_SESSION" ||
+        event === "SIGNED_IN" ||
+        event === "TOKEN_REFRESHED"
+      ) {
+        finish(session);
+      }
+    });
+  });
+}
 
 export async function resolveAuthDisplayName() {
   if (typeof window === "undefined") return "게스트";
 
-  const isGuestLoggedIn =
-    window.sessionStorage.getItem("yeounGuestLoggedIn") === "true";
+  if (isGuestLoggedIn()) return "게스트";
 
-  if (isGuestLoggedIn) return "게스트";
-
-  const { data } = await supabase.auth.getSession();
-  const sessionEmail = data.session?.user.email;
-
-  if (sessionEmail) {
-    const name = displayNameFromEmail(sessionEmail);
-    window.sessionStorage.setItem("yeounUserEmail", sessionEmail);
-    window.sessionStorage.setItem("yeounUserName", name);
+  const session = await waitForAuthSession();
+  if (session?.user.email) {
+    const name = displayNameFromEmail(session.user.email);
+    syncAuthCacheFromSession(session);
     return name;
   }
 
-  return window.sessionStorage.getItem("yeounUserName")?.trim() || "회원";
+  return getCachedUserName() || "회원";
 }
 
 export async function ensureLoggedIn(routerReplace: (path: string) => void) {
   if (typeof window === "undefined") return false;
 
-  const isGuestLoggedIn =
-    window.sessionStorage.getItem("yeounGuestLoggedIn") === "true";
+  if (isGuestLoggedIn()) return true;
 
-  if (isGuestLoggedIn) return true;
-
-  const { data } = await supabase.auth.getSession();
-  if (data.session) return true;
-
-  if (window.sessionStorage.getItem("yeounUserName")) return true;
+  const session = await waitForAuthSession();
+  if (session) {
+    syncAuthCacheFromSession(session);
+    return true;
+  }
 
   routerReplace("/");
   return false;
+}
+
+export async function signOutUser(routerReplace?: (path: string) => void) {
+  clearGuestLoggedIn();
+  clearUserAuthCache();
+  try {
+    await getSupabase().auth.signOut();
+  } catch {
+    // ignore
+  }
+  if (routerReplace) routerReplace("/");
 }

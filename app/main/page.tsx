@@ -11,6 +11,7 @@ import {
   YEOUN_BLOCK_GAP,
   YEOUN_BTN,
   YEOUN_CONTENT_W,
+  YEOUN_PAGE_MAIN,
   YEOUN_SCREEN,
   YEOUN_SHELL_SECTION,
   YEOUN_TEXT,
@@ -100,17 +101,15 @@ function MainContent() {
     ? gradientFromEmotionParam(currentTicket.emotions || null)
     : undefined;
 
+  const profileActionBtnClass = `shrink-0 rounded-[2cqw] border border-[#FDAFC7] bg-white px-[3cqw] py-[1.2cqh] ${YEOUN_TEXT.body} text-[#FDAFC7] transition hover:bg-[#fff7fa] active:scale-[0.99]`;
+
   return (
     <div className={YEOUN_SCREEN} style={yeounFont}>
-      <main className="mx-auto flex h-full w-full items-center justify-center overflow-hidden">
+      <main className={YEOUN_PAGE_MAIN}>
         <section className={`${YEOUN_SHELL_SECTION} items-stretch`}>
-          <h1 className={`mt-[5.4cqh] text-center ${YEOUN_TEXT.title}`}>홈</h1>
+          <h1 className={`mt-[5.4cqh] text-center ${YEOUN_TEXT.brandHome}`}>YEOUN</h1>
 
-          <button
-            type="button"
-            onClick={() => router.push("/profile")}
-            className={`mx-auto mt-[5.2cqh] flex ${YEOUN_CONTENT_W} items-center gap-[3cqw] text-left transition hover:opacity-90`}
-          >
+          <div className={`mx-auto mt-[5.2cqh] flex ${YEOUN_CONTENT_W} items-center gap-[3cqw]`}>
             <div className={YEOUN_AVATAR}>
               {avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -119,8 +118,15 @@ function MainContent() {
                 <span className="flex h-full w-full items-center justify-center">🧸</span>
               )}
             </div>
-            <p className={YEOUN_TEXT.title}>{userName} 님</p>
-          </button>
+            <p className={`min-w-0 flex-1 ${YEOUN_TEXT.title}`}>{userName} 님</p>
+            <button
+              type="button"
+              onClick={() => router.push("/profile")}
+              className={profileActionBtnClass}
+            >
+              프로필 보기
+            </button>
+          </div>
 
           <button
             type="button"

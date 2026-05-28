@@ -64,12 +64,11 @@ export default function EmotionPage() {
                   key={chip.label}
                   type="button"
                   onClick={() => toggleChip(chip.label)}
-                  className={`flex aspect-square w-full items-center justify-center rounded-[2cqw] border border-[#e9e3dd] ${YEOUN_TEXT.body} text-[#202020] shadow-[0_6px_12px_rgba(0,0,0,0.12)] transition active:scale-[0.98]`}
-                  style={{
-                    backgroundColor: chip.color,
-                    outline: isSelected ? "3px solid #FDAFC7" : "none",
-                    outlineOffset: "-3px",
-                  }}
+                  aria-pressed={isSelected}
+                  className={`flex aspect-square w-full items-center justify-center rounded-[2cqw] border border-[#e9e3dd] ${YEOUN_TEXT.body} text-[#202020] shadow-[0_6px_12px_rgba(0,0,0,0.12)] transition-opacity duration-150 active:scale-[0.98] ${
+                    isSelected ? "opacity-30" : "opacity-100"
+                  }`}
+                  style={{ backgroundColor: chip.color }}
                 >
                   {chip.label}
                 </button>

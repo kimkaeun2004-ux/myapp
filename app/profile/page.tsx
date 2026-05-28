@@ -19,8 +19,10 @@ import {
   YEOUN_BLOCK_GAP,
   YEOUN_BTN,
   YEOUN_CONTENT_W,
+  YEOUN_PAGE_MAIN,
   YEOUN_SCREEN,
   YEOUN_SHELL_SECTION,
+  YEOUN_NAV_BACK_PAGE,
   YEOUN_TEXT,
   YEOUN_TICKET,
   yeounFont,
@@ -121,16 +123,19 @@ export default function ProfilePage() {
 
   return (
     <div className={YEOUN_SCREEN} style={yeounFont}>
-      <main className="mx-auto flex h-full w-full items-center justify-center overflow-hidden">
+      <main className={YEOUN_PAGE_MAIN}>
         <section className={`${YEOUN_SHELL_SECTION} overflow-y-auto`}>
-          <button
-            type="button"
-            onClick={() => router.push("/main")}
-            className={`mt-[5.4cqh] px-[6.2cqw] text-left ${YEOUN_TEXT.back}`}
-            aria-label="뒤로"
-          >
-            ‹
-          </button>
+          <header className="relative shrink-0">
+            <h1 className={`mt-[5.4cqh] text-center ${YEOUN_TEXT.brandHome}`}>YEOUN</h1>
+            <button
+              type="button"
+              onClick={() => router.push("/main")}
+              className={YEOUN_NAV_BACK_PAGE}
+              aria-label="뒤로"
+            >
+              ‹
+            </button>
+          </header>
 
           <div className={`mx-auto mt-[5.2cqh] flex ${YEOUN_CONTENT_W} items-center gap-[3cqw]`}>
             <button

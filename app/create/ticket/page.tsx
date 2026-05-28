@@ -5,6 +5,7 @@ import { FlowButtonRow, FlowPrimaryHalf, FlowSecondaryHalf } from "../_shared/Fl
 import { TicketFrontContent } from "../_shared/TicketFrontContent";
 import { useTicketRegistration } from "@/lib/ticket/use-ticket-registration";
 import {
+  YEOUN_TEXT,
   YEOUN_TICKET,
   YEOUN_TICKET_CARD,
   YEOUN_TICKET_CARD_INNER,
@@ -90,7 +91,7 @@ function TicketContent() {
                   const q = draftQuote.trim();
                   router.push(buildFrontCompleteHref({ quote: q }));
                 }}
-                className="flex h-[min(22px,2.4dvh)] min-h-[20px] w-[min(52px,12cqw)] items-center justify-center rounded-[2cqw] border border-[#FDAFC7] bg-[#FDAFC7] text-[2cqw] font-bold leading-none text-[#222] shadow-[0_2px_5px_rgba(0,0,0,0.1)] transition hover:bg-[#f99fbe]"
+                className={`flex h-[min(26px,2.8dvh)] min-h-[24px] w-[min(58px,13cqw)] items-center justify-center rounded-[2cqw] border border-[#FDAFC7] bg-[#FDAFC7] ${YEOUN_TEXT.body} leading-none text-[#222] shadow-[0_2px_5px_rgba(0,0,0,0.1)] transition hover:bg-[#f99fbe]`}
               >
                 입력하기
               </button>

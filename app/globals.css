@@ -24,3 +24,10 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* 웹(넓은 화면): 바깥 배경 대비로 앱 창이 보이도록 */
+@media (min-width: 768px) {
+  body {
+    background: #e8e4dc;
+  }
+}
