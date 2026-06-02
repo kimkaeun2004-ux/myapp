@@ -1,3 +1,4 @@
+import { trackEvent } from "@/lib/analytics/client";
 import {
   deleteTicketFromSupabase,
   fetchUserStoredTickets,
@@ -76,43 +77,74 @@ export async function loadUserTickets(): Promise<StoredTicket[]> {
   return hydrateStoredTickets(merged);
 }
 
-/** 완성 화면 저장 — 로컬 목록에 추가 후 (로그인 시) Supabase 동기화 */
+function normalizeTicketForSave(ticket: StoredTicket): StoredTicket {
+  return {
+    ...ticket,
+    emotions: ticket.emotions?.trim() ?? "",
+    concertName: ticket.concertName?.trim() ?? "",
+    artist: ticket.artist?.trim() ?? "",
+    quote: ticket.quote?.trim() ?? "",
+    venue: ticket.venue?.trim() ?? "",
+    date: ticket.date?.trim() ?? "",
+    day: ticket.day?.trim() ?? "",
+    backImage: ticket.backImage?.trim() ?? "",
+  };
+}
+
+/** 완성 화면 발행 — 로컬 저장 후 (로그인 시) yeoun_tickets insert + analytics */
 export async function saveUserTicket(
   ticket: StoredTicket
-): Promise<{ ok: true } | { ok: false; reason: "storage" }> {
-  const stored = await saveStoredTicket(ticket);
+): Promise<{ ok: true } | { ok: false; reason: "storage" | "remote" }> {
+  const normalized = normalizeTicketForSave(ticket);
+
+  const stored = await saveStoredTicket(normalized);
   if (!stored.ok) return stored;
 
   const userId = await getCurrentUserId();
   if (!userId) return { ok: true };
 
   const backForRemote =
-    ticket.backImage?.trim() && ticket.backImage.length < 400_000
-      ? ticket.backImage
+    normalized.backImage && normalized.backImage.length < 400_000
+      ? normalized.backImage
       : undefined;
 
   const { ok, id: supabaseId } = await saveTicketToSupabase({
-    emotion: ticket.emotions,
-    concertName: ticket.concertName,
-    artist: ticket.artist,
-    quote: ticket.quote,
-    venue: ticket.venue,
-    date: ticket.date,
-    day: ticket.day,
+    emotion: normalized.emotions,
+    concertName: normalized.concertName || undefined,
+    artist: normalized.artist || undefined,
+    quote: normalized.quote || undefined,
+    venue: normalized.venue || undefined,
+    date: normalized.date || undefined,
+    day: normalized.day || undefined,
     backImage: backForRemote,
   });
 
-  if (ok && supabaseId) {
-    await attachSupabaseIdToLocalTicket(ticket, supabaseId);
+  if (!ok || !supabaseId) {
+    const local = loadStoredTickets();
+    await cacheTicketsLocally(local);
+    return { ok: false, reason: "remote" };
   }
 
+  await attachSupabaseIdToLocalTicket(normalized, supabaseId);
+
+  await trackEvent({
+    eventName: "ticket_publish_success",
+    userId,
+    path: "/create/complete",
+    metadata: {
+      ticketId: supabaseId,
+      concertName: normalized.concertName,
+      artist: normalized.artist,
+      emotions: normalized.emotions,
+      venue: normalized.venue,
+      dateLabel: normalized.date,
+      dayLabel: normalized.day,
+    },
+  });
+
   const local = loadStoredTickets();
-  if (ok) {
-    const remote = await fetchUserStoredTickets();
-    await cacheTicketsLocally(mergeTicketLists(remote, local));
-  } else {
-    await cacheTicketsLocally(local);
-  }
+  const remote = await fetchUserStoredTickets();
+  await cacheTicketsLocally(mergeTicketLists(remote, local));
 
   return { ok: true };
 }

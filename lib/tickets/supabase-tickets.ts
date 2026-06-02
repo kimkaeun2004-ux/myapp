@@ -48,13 +48,13 @@ export async function saveTicketToSupabase(
 
   const fullRow = {
     user_id: userId,
-    emotions: input.emotion,
-    concert_name: input.concertName ?? null,
-    artist: input.artist ?? null,
-    quote: input.quote ?? null,
-    venue: input.venue ?? null,
-    date_label: input.date ?? null,
-    day_label: input.day ?? null,
+    emotions: input.emotion.trim(),
+    concert_name: input.concertName?.trim() || null,
+    artist: input.artist?.trim() || null,
+    quote: input.quote?.trim() || null,
+    venue: input.venue?.trim() || null,
+    date_label: input.date?.trim() || null,
+    day_label: input.day?.trim() || null,
     back_image: input.backImage ?? null,
   };
 
@@ -249,7 +249,7 @@ export function mapStoredTicketToReportRow(ticket: StoredTicket) {
 }
 
 export async function fetchReportTickets(): Promise<ReportTicketRecord[]> {
-  const remote = await fetchUserTicketsForReport({ monthOnly: true });
+  const remote = await fetchUserTicketsForReport({ monthOnly: false });
 
   if (remote.length > 0) {
     return remote.map((row): ReportTicketRecord => ({

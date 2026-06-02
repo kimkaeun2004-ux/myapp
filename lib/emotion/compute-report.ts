@@ -65,10 +65,25 @@ export function computeEmotionReport(
   }
 
   const frequency = new Map<string, number>();
+  let totalEmotionTags = 0;
 
   for (const ticket of tickets) {
-    const primary = primaryEmotion(ticket.emotion);
-    frequency.set(primary, (frequency.get(primary) ?? 0) + 1);
+    for (const tag of parseEmotionTags(ticket.emotion)) {
+      totalEmotionTags += 1;
+      frequency.set(tag, (frequency.get(tag) ?? 0) + 1);
+    }
+  }
+
+  if (totalEmotionTags === 0) {
+    return {
+      topEmotion: "몽환",
+      topEmotionCount: 0,
+      totalTickets: tickets.length,
+      lingeringIndex: 0,
+      month,
+      latestConcertLabel: formatConcertLabel(tickets[0]),
+      isEmpty: true,
+    };
   }
 
   let topEmotion = "몽환";
@@ -82,7 +97,7 @@ export function computeEmotionReport(
   }
 
   const totalTickets = tickets.length;
-  const lingeringIndex = Math.round((topEmotionCount / totalTickets) * 100);
+  const lingeringIndex = Math.round((topEmotionCount / totalEmotionTags) * 100);
 
   const sortedByRecency = [...tickets].sort((a, b) => {
     const aTime = ticketTimestamp(a);

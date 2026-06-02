@@ -69,23 +69,27 @@ function CompleteContent() {
       emotions: emotionsParam ?? "",
       quote,
       backImage: resolvedBack,
-      concertName: reg.concertName,
-      artist: reg.artist,
-      date: reg.date,
-      day: reg.day,
-      venue: reg.venue,
+      concertName: reg.concertName.trim(),
+      artist: reg.artist.trim(),
+      date: reg.date.trim(),
+      day: reg.day.trim(),
+      venue: reg.venue.trim(),
     });
 
     if (!result.ok) {
       saveStartedRef.current = false;
       setIsSaving(false);
-      setSaveError("저장에 실패했습니다. 용량이 크면 뒷면 사진 없이 다시 시도해 주세요.");
+      setSaveError(
+        result.reason === "remote"
+          ? "티켓 발행에 실패했습니다. 네트워크 연결을 확인하고 다시 시도해 주세요."
+          : "저장에 실패했습니다. 용량이 크면 뒷면 사진 없이 다시 시도해 주세요."
+      );
       return;
     }
 
     clearTicketDraft();
     await clearBackImageDraft();
-    router.push("/main");
+    router.push("/report");
   };
 
   const handleShareToGallery = async () => {
@@ -136,7 +140,7 @@ function CompleteContent() {
               disabled={isSaving}
               className="disabled:opacity-70"
             >
-              {isSaving ? "저장 중..." : "저장하기"}
+              {isSaving ? "발행 중..." : "발행하기"}
             </FlowPrimaryHalf>
           </FlowButtonRow>
           <FlowOutlineButton
