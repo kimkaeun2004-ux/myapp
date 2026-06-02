@@ -92,7 +92,7 @@ export default function ScanPage() {
   return (
     <CreateFlowShell
       title="티켓을 인식해보세요."
-      subtitle="날짜와 공연장은 자동으로 채워져요."
+      subtitle="티켓이 없다면 예매내역을 업로드 해보세요."
       footer={
         <>
           <FlowCtaButton

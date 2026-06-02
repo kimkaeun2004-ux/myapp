@@ -62,6 +62,15 @@ export default function ConfirmPage() {
   return (
     <CreateFlowShell
       title={isCompleted ? "수정 완료!" : "티켓 정보를 확인해 주세요"}
+      subtitle={
+        isCompleted ? undefined : (
+          <>
+            인식되지 않은 정보나 수정하고 싶은 내용이 있다면,
+            <br />
+            아래에서 직접 편집하여 나만의 티켓을 완성해 보세요.
+          </>
+        )
+      }
       footer={
         isCompleted ? (
           <FlowButtonRow>

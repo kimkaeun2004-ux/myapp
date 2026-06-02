@@ -124,6 +124,297 @@ function parseDateParts(
   };
 }
 
+const BOOKING_DETAIL_LABEL =
+  /^(?:예매\s*(?:번호|일)|관람\s*일(?:시)?|공연\s*장소|매수|취소(?:마감)?|상태|좌석|입장|결제|주문)/i;
+
+/** 멜론·인터파크 등 예매내역 캡처 (라벨 OCR 실패 시 휴리스틱 포함) */
+function isBookingHistoryOcr(rawText: string, lines: OcrLine[]): boolean {
+  const blob = `${rawText}\n${lines.map((l) => l.text).join("\n")}`;
+
+  if (/예매/.test(blob) && /관람\s*일/.test(blob) && /공연\s*장소/.test(blob)) {
+    return true;
+  }
+
+  if (/예매\s*완료|입금\s*완료/i.test(blob)) return true;
+  if (/M\d{6,}/.test(blob) && /\d+\s*매/.test(blob)) return true;
+
+  const dateLines = lines.filter((l) => parseDateValueFromText(l.text).date);
+  if (dateLines.length >= 2 && VENUE_PATTERN.test(blob)) return true;
+
+  return false;
+}
+
+function hasViewingDateContext(rawText: string, lines: OcrLine[]): boolean {
+  if (isBookingHistoryOcr(rawText, lines)) return true;
+  const blob = `${rawText}\n${lines.map((l) => l.text).join("\n")}`;
+  return /관람\s*일(?:시)?/i.test(blob);
+}
+
+function isBookingHistoryNoiseLine(text: string): boolean {
+  const normalized = normalizeOcrText(text);
+  if (!normalized) return true;
+  if (/^M\d{6,}$/i.test(normalized)) return true;
+  if (/^\d+\s*매$/.test(normalized)) return true;
+  if (/까지|취소\s*마감|예매\s*완료|입금\s*완료/i.test(normalized)) return true;
+  return false;
+}
+
+function inferBookingDateFromOrphanDates(lines: OcrLine[]): string {
+  const dates = lines
+    .filter((l) => !isBookingHistoryNoiseLine(l.text))
+    .filter((l) => !/\d{1,2}\s*시/.test(l.text))
+    .map((l) => parseDateValueFromText(l.text).date.split(/\s/)[0])
+    .filter(Boolean);
+
+  if (dates.length === 0) return "";
+  dates.sort((a, b) => ymdSortKey(a) - ymdSortKey(b));
+  return dates[0];
+}
+
+/** OCR이 관람일·예매일 라벨을 못 읽을 때 — 공연 시간(16시) 있는 날짜 = 관람일 */
+function parseViewingDateWhenLabelsMissing(lines: OcrLine[]): { date: string; day: string } {
+  const bookingDate =
+    extractBookingDateFromLines(lines) || inferBookingDateFromOrphanDates(lines);
+
+  const usable = lines.filter((l) => !isBookingHistoryNoiseLine(l.text));
+
+  const withShowTime = usable.filter(
+    (l) => /\d{1,2}\s*시/.test(l.text) && !/까지|마감|취소/i.test(l.text)
+  );
+
+  if (withShowTime.length > 0) {
+    if (withShowTime.length === 1) {
+      return parseDateValueFromText(withShowTime[0].text);
+    }
+    const latest = pickLatestViewingDateExcludingBooking(withShowTime, bookingDate);
+    if (latest.date) return latest;
+  }
+
+  const latest = pickLatestViewingDateExcludingBooking(usable, bookingDate);
+  if (latest.date) return latest;
+
+  return { date: "", day: "" };
+}
+
+function parseVenueFromBookingHistoryNoLabels(lines: OcrLine[]): string {
+  for (const line of lines) {
+    const text = normalizeOcrText(line.text);
+    if (text.length < 2 || isBookingHistoryNoiseLine(text)) continue;
+    if (DATE_IN_LINE.test(text) && !VENUE_PATTERN.test(text)) continue;
+    if (VENUE_PATTERN.test(text)) return cleanVenueText(text);
+  }
+  return "";
+}
+
+function isAdjacentDetailLabel(text: string, labelPattern: RegExp): boolean {
+  const normalized = normalizeOcrText(text);
+  if (!normalized) return true;
+  if (labelPattern.test(normalized) && normalizeOcrText(normalized.replace(labelPattern, "")).length < 3) {
+    return true;
+  }
+  if (BOOKING_DETAIL_LABEL.test(normalized) && !/(20\d{2}|\d{1,2}\s*월)/.test(normalized)) {
+    return true;
+  }
+  return isBookingOnlyDateLine(normalized) && !VIEWING_DATE_LABEL.test(normalized);
+}
+
+function extractBookingDateFromLines(lines: OcrLine[]): string {
+  const value = findValueAfterLabel(
+    lines,
+    /예매\s*일/i,
+    (t) => /20\d{2}/.test(t) || DATE_IN_LINE.test(t)
+  );
+
+  if (value) {
+    const parsed =
+      parseGenericYmd(value) ?? parseViewingDateFromOcrText(`예매일 ${value}`);
+    return parsed?.date?.split(/\s/)[0] ?? "";
+  }
+
+  for (const line of lines.filter((l) => isBookingOnlyDateLine(l.text))) {
+    const parsed = parseGenericYmd(line.text);
+    if (parsed?.date) return parsed.date.split(/\s/)[0];
+  }
+
+  return "";
+}
+
+function findValueAfterLabel(
+  lines: OcrLine[],
+  labelPattern: RegExp,
+  isValidValue: (text: string) => boolean
+): string {
+  const sorted = [...lines].sort((a, b) => a.top - b.top);
+
+  for (let i = 0; i < sorted.length; i++) {
+    const text = sorted[i].text;
+    const inline = text.match(
+      new RegExp(`(?:${labelPattern.source})\\s*[:：]?\\s*(.+)`, labelPattern.flags)
+    );
+    if (inline?.[1]) {
+      const value = normalizeOcrText(inline[1]);
+      if (isValidValue(value)) return value;
+    }
+
+    if (labelPattern.test(text) && normalizeOcrText(text.replace(labelPattern, "")).length < 3) {
+      for (let j = i + 1; j < sorted.length && j <= i + 3; j++) {
+        const candidate = normalizeOcrText(sorted[j].text);
+        if (isAdjacentDetailLabel(candidate, labelPattern)) continue;
+        if (isValidValue(candidate)) return candidate;
+      }
+    }
+  }
+
+  return "";
+}
+
+function parseDateValueFromText(text: string): { date: string; day: string } {
+  const labeled = parseViewingDateFromOcrText(`관람일 ${text}`);
+  if (labeled.date) return labeled;
+
+  const generic = parseGenericYmd(text);
+  if (generic?.date) {
+    return {
+      date: generic.date + parseTimeSuffix(text),
+      day: generic.day,
+    };
+  }
+
+  return { date: "", day: "" };
+}
+
+function ymdSortKey(dateStr: string): number {
+  const m = dateStr.match(/^(\d{2})-(\d{2})-(\d{2})/);
+  if (!m) return 0;
+  const y = Number(m[1]) + (Number(m[1]) < 70 ? 2000 : 1900);
+  return y * 10000 + Number(m[2]) * 100 + Number(m[3]);
+}
+
+function pickLatestViewingDateExcludingBooking(
+  lines: OcrLine[],
+  bookingDate: string
+): { date: string; day: string } {
+  let best: { date: string; day: string } = { date: "", day: "" };
+  let bestKey = -1;
+
+  for (const line of lines) {
+    if (isBookingOnlyDateLine(line.text)) continue;
+    if (/^예매\s*일$/i.test(normalizeOcrText(line.text))) continue;
+
+    const parsed = parseDateValueFromText(line.text);
+    const dateOnly = parsed.date.split(/\s/)[0];
+    if (!parsed.date || !dateOnly || dateOnly === bookingDate) continue;
+
+    const key = ymdSortKey(dateOnly);
+    if (key > bestKey) {
+      bestKey = key;
+      best = parsed;
+    }
+  }
+
+  return best;
+}
+
+function parseViewingDateFromBookingHistory(lines: OcrLine[]): { date: string; day: string } {
+  const bookingDate = extractBookingDateFromLines(lines);
+
+  const value = findValueAfterLabel(
+    lines,
+    /관람\s*일(?:시)?/i,
+    (t) => !BOOKING_DATE_LABEL.test(t) && (/20\d{2}/.test(t) || DATE_IN_LINE.test(t))
+  );
+
+  if (value) {
+    const parsed = parseDateValueFromText(value);
+    const dateOnly = parsed.date.split(/\s/)[0];
+    if (parsed.date && dateOnly !== bookingDate) return parsed;
+  }
+
+  for (const line of lines.filter((l) => /관람\s*일(?:시)?/i.test(l.text))) {
+    const parsed = parseViewingDateFromOcrText(line.text);
+    const dateOnly = parsed.date.split(/\s/)[0];
+    if (parsed.date && dateOnly !== bookingDate) return parsed;
+  }
+
+  const hasBookingDateLabel = lines.some((l) => /예매\s*일/i.test(l.text));
+  const hasViewingDateLabel = lines.some((l) => /관람\s*일(?:시)?/i.test(l.text));
+
+  if (hasBookingDateLabel && hasViewingDateLabel) {
+    const latest = pickLatestViewingDateExcludingBooking(lines, bookingDate);
+    if (latest.date) return latest;
+  }
+
+  return parseViewingDateWhenLabelsMissing(lines);
+}
+
+function parseVenueFromBookingHistory(lines: OcrLine[]): string {
+  const value = findValueAfterLabel(
+    lines,
+    /공연\s*장소/i,
+    (t) =>
+      t.length >= 2 &&
+      !DATE_IN_LINE.test(t) &&
+      !BOOKING_DETAIL_LABEL.test(t) &&
+      !/예매|매수|취소|상태|완료/i.test(t)
+  );
+  if (value) return cleanVenueText(value);
+
+  for (const line of lines) {
+    const fromLine = line.text.match(/공연\s*장소\s*[:：]?\s*(.+)/i);
+    if (fromLine?.[1]) {
+      const v = cleanVenueText(fromLine[1]);
+      if (v.length >= 2) return v;
+    }
+  }
+
+  return parseVenueFromBookingHistoryNoLabels(lines);
+}
+
+/** 예매내역 상단 — 바운딩 박스가 큰(진한) 제목 줄 */
+function parseConcertNameFromBookingHistory(lines: OcrLine[]): string {
+  if (lines.length === 0) return "";
+
+  const tops = lines.map((l) => l.top);
+  const minTop = Math.min(...tops);
+  const maxTop = Math.max(...tops);
+  const span = Math.max(1, maxTop - minTop);
+  const upperCutoff = minTop + span * 0.42;
+  const maxHeight = Math.max(...lines.map((l) => l.height), 1);
+
+  const isTitleCandidate = (line: OcrLine) => {
+    const text = line.text.trim();
+    if (text.length < 6) return false;
+    if (BOOKING_DETAIL_LABEL.test(text)) return false;
+    if (CONCERT_NAME_NOISE.test(text)) return false;
+    if (/^M\d{6,}/.test(text)) return false;
+    if (/예매\s*완료|입금\s*완료|취소\s*마감/i.test(text)) return false;
+    if (DATE_IN_LINE.test(text) && text.length < 28) return false;
+    if (/^\d+[\d\s\-./:]*$/.test(text)) return false;
+    if (line.top > upperCutoff) return false;
+    return /[A-Za-z가-힣]/.test(text);
+  };
+
+  const scored = lines
+    .filter(isTitleCandidate)
+    .map((line) => {
+      const heightRatio = line.height / maxHeight;
+      const relTop = (line.top - minTop) / span;
+      return {
+        text: line.text,
+        score: heightRatio * 220 + (1 - relTop) * 60 + line.confidence * 0.2 + Math.min(line.width, 520) * 0.03,
+      };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  const best = scored[0];
+  if (!best) return parseConcertNameFromLines(lines);
+
+  return normalizeOcrText(best.text)
+    .replace(/[>\u203a›»]+$/g, "")
+    .replace(/\.{2,}$/g, "")
+    .trim();
+}
+
 function parseTimeSuffix(text: string): string {
   const normalized = text.replace(/\s+/g, " ");
   const time =
@@ -131,11 +422,21 @@ function parseTimeSuffix(text: string): string {
       /(?:관람\s*)?(?:일시|시간|TIME|SHOW\s*TIME)\s*[:：]?\s*(\d{1,2})\s*[:：시]\s*(\d{2})/i
     ) ?? normalized.match(/(\d{1,2})\s*[:：시]\s*(\d{2})\s*(?:분)?/i);
 
-  if (!time) return "";
-  const h = Number(time[1]);
-  const m = Number(time[2]);
-  if (h < 0 || h > 23 || m < 0 || m > 59) return "";
-  return ` ${pad2(h)}:${pad2(m)}`;
+  if (time) {
+    const h = Number(time[1]);
+    const m = Number(time[2]);
+    if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+      return ` ${pad2(h)}:${pad2(m)}`;
+    }
+  }
+
+  const hourOnly = normalized.match(/(?:일|\))\s*(\d{1,2})\s*시(?:\s*(?!\d)|$)/i);
+  if (hourOnly) {
+    const h = Number(hourOnly[1]);
+    if (h >= 0 && h <= 23) return ` ${pad2(h)}:00`;
+  }
+
+  return "";
 }
 
 function isBookingOnlyDateLine(text: string): boolean {
@@ -213,7 +514,7 @@ export function parseViewingDateFromOcrText(text: string): { date: string; day: 
     if (fromShow?.date) return fromShow;
   }
 
-  if (BOOKING_DATE_LABEL.test(normalized)) {
+  if (BOOKING_DATE_LABEL.test(normalized) && !VIEWING_DATE_LABEL.test(normalized)) {
     return { date: "", day: "" };
   }
 
@@ -235,9 +536,17 @@ export function parseDateFromOcrText(text: string): { date: string; day: string 
 
 /** 줄 단위로 관람일·관람일시만 탐색 (예매일 줄 무시) */
 export function parseViewingDateFromLines(lines: OcrLine[]): { date: string; day: string } {
+  const hasViewingLabel = lines.some((l) => /관람\s*일(?:시)?/i.test(l.text));
+
+  if (hasViewingLabel) {
+    const fromBooking = parseViewingDateFromBookingHistory(lines);
+    if (fromBooking.date || fromBooking.day) return fromBooking;
+  }
+
   const dateLike = (text: string) =>
     (DATE_IN_LINE.test(text) || TIME_IN_LINE.test(text) || /20\d{2}/.test(text)) &&
-    !isBookingOnlyDateLine(text);
+    !isBookingOnlyDateLine(text) &&
+    !/^예매\s*일/i.test(text);
 
   const tiers: OcrLine[][] = [
     lines.filter((l) => /관람\s*일(?:시)?/i.test(l.text)),
@@ -245,8 +554,11 @@ export function parseViewingDateFromLines(lines: OcrLine[]): { date: string; day
     lines.filter(
       (l) => VIEWING_DATE_LABEL.test(l.text) && !BOOKING_DATE_LABEL.test(l.text)
     ),
-    lines.filter((l) => dateLike(l.text)),
   ];
+
+  if (!hasViewingLabel) {
+    tiers.push(lines.filter((l) => dateLike(l.text)));
+  }
 
   const seen = new Set<string>();
   for (const tier of tiers) {
@@ -421,18 +733,31 @@ export function buildDraftFromOcr(page: OcrPageLike): Pick<
 > {
   const rawOcrText = page.text ?? "";
   const lines = extractOcrLines(page);
-  const concertName = parseConcertNameFromLines(lines);
+  const bookingHistory = isBookingHistoryOcr(rawOcrText, lines);
+  const strictViewingDate = bookingHistory || hasViewingDateContext(rawOcrText, lines);
 
-  let { date, day } = parseViewingDateFromLines(lines);
-  if (!date && !day) {
+  const concertName = bookingHistory
+    ? parseConcertNameFromBookingHistory(lines)
+    : parseConcertNameFromLines(lines);
+
+  let { date, day } = strictViewingDate
+    ? parseViewingDateFromBookingHistory(lines)
+    : parseViewingDateFromLines(lines);
+
+  if (!strictViewingDate && !date && !day) {
     const fromText = parseViewingDateFromOcrText(rawOcrText);
     date = fromText.date;
     day = fromText.day;
   }
 
-  const venue = parseVenueFromOcrText(rawOcrText, lines, {
-    excludeTexts: concertName ? [concertName] : [],
-  });
+  const venue = bookingHistory
+    ? parseVenueFromBookingHistory(lines) ||
+      parseVenueFromOcrText(rawOcrText, lines, {
+        excludeTexts: concertName ? [concertName] : [],
+      })
+    : parseVenueFromOcrText(rawOcrText, lines, {
+        excludeTexts: concertName ? [concertName] : [],
+      });
 
   return { concertName, date, day, venue, rawOcrText };
 }
