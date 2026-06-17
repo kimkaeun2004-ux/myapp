@@ -55,8 +55,10 @@ export default function EmotionPage() {
       }
     >
       <div className={YEOUN_TICKET_SLOT}>
-        <section className={`${YEOUN_TICKET_CARD} border-[#FDAFC7] bg-[#ffffff] px-[4cqw] py-[2.4cqh]`}>
-          <div className="grid h-full w-full grid-cols-3 content-center gap-[1.8cqw]">
+        <section
+          className={`${YEOUN_TICKET_CARD} !h-[min(520px,50dvh)] !min-h-[340px] border-[#FDAFC7] bg-[#ffffff] px-[4cqw] py-[6.5cqw]`}
+        >
+          <div className="grid w-full grid-cols-3 gap-[1.8cqw]">
             {EMOTION_CHIPS.map((chip) => {
               const isSelected = selected.includes(chip.label);
               return (
