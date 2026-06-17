@@ -43,12 +43,12 @@ export default function OnboardingPage() {
     <div className={YEOUN_SCREEN} style={yeounFont}>
       <main className={YEOUN_PAGE_MAIN}>
         <section className={`${YEOUN_SHELL_SECTION} items-center`}>
-          <h1 className={`mt-[20.4cqh] text-center ${YEOUN_TEXT.brand}`}>YEOUN</h1>
-          <p className={`mt-[1.9cqh] text-center ${YEOUN_TEXT.title}`}>
+          <h1 className={`mt-[28cqh] text-center ${YEOUN_TEXT.brand}`}>YEOUN</h1>
+          <p className={`mt-[2.2cqh] text-center ${YEOUN_TEXT.title}`}>
             당신의 공연은 어떤 색이었나요?
           </p>
 
-          <div className={`mt-[11.6cqh] flex ${YEOUN_CONTENT_W} flex-col gap-[1.3cqh]`}>
+          <div className={`mt-[12.4cqh] flex ${YEOUN_CONTENT_W} flex-col gap-[1.3cqh]`}>
             <button
               type="button"
               onClick={() => void handleEmailStart()}
