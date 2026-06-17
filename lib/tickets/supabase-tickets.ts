@@ -1,4 +1,5 @@
 import type { ReportTicketRecord } from "@/lib/emotion/compute-report";
+import { insertYeounTicketRow } from "@/lib/tickets/insert-yeoun-ticket";
 import {
   isTicketDeleted,
   storedTicketsMatch,
@@ -46,44 +47,42 @@ export async function saveTicketToSupabase(
   const userId = await getCurrentUserId();
   if (!userId) return { ok: false };
 
-  const fullRow = {
-    user_id: userId,
-    emotions: input.emotion.trim(),
-    concert_name: input.concertName?.trim() || null,
-    artist: input.artist?.trim() || null,
-    quote: input.quote?.trim() || null,
-    venue: input.venue?.trim() || null,
-    date_label: input.date?.trim() || null,
-    day_label: input.day?.trim() || null,
-    back_image: input.backImage ?? null,
-  };
+  const { ok, id } = await insertYeounTicketRow(getSupabase(), input, userId);
 
-  let { data, error } = await getSupabase()
-    .from("yeoun_tickets")
-    .insert(fullRow)
-    .select("id")
-    .single();
-
-  if (error && isMissingColumnError(error.message)) {
-    const minimal = {
-      user_id: userId,
-      emotions: input.emotion,
-      quote: input.quote ?? null,
-      back_image: input.backImage ?? null,
-    };
-    ({ data, error } = await getSupabase()
-      .from("yeoun_tickets")
-      .insert(minimal)
-      .select("id")
-      .single());
+  if (!ok && process.env.NODE_ENV === "development") {
+    console.warn("[yeoun] saveTicketToSupabase failed");
   }
 
-  if (error && process.env.NODE_ENV === "development") {
-    console.warn("[yeoun] saveTicketToSupabase:", error.message);
-  }
+  return { ok, id };
+}
 
-  const id = data && typeof data === "object" && "id" in data ? String(data.id) : undefined;
-  return { ok: !error, id };
+/** 게스트 발행 — user_id 없이 yeoun_tickets에만 적재 */
+export async function publishGuestTicketToSupabase(
+  input: SaveYeounTicketInput
+): Promise<{ ok: boolean; id?: string }> {
+  try {
+    const res = await fetch("/api/tickets/publish", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+
+    if (!res.ok) {
+      if (process.env.NODE_ENV === "development") {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null;
+        console.warn("[yeoun] publishGuestTicketToSupabase:", body?.error ?? res.status);
+      }
+      return { ok: false };
+    }
+
+    const data = (await res.json()) as { ok?: boolean; id?: string };
+    return { ok: Boolean(data.ok && data.id), id: data.id };
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[yeoun] publishGuestTicketToSupabase:", error);
+    }
+    return { ok: false };
+  }
 }
 
 export async function deleteTicketFromSupabase(

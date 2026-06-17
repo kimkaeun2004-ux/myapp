@@ -3,6 +3,7 @@ import {
   deleteTicketFromSupabase,
   fetchUserStoredTickets,
   getCurrentUserId,
+  publishGuestTicketToSupabase,
   saveTicketToSupabase,
   syncLocalTicketsToSupabase,
 } from "@/lib/tickets/supabase-tickets";
@@ -91,7 +92,7 @@ function normalizeTicketForSave(ticket: StoredTicket): StoredTicket {
   };
 }
 
-/** 완성 화면 발행 — 로컬 저장 후 (로그인 시) yeoun_tickets insert + analytics */
+/** 완성 화면 발행 — 로컬 저장 후 yeoun_tickets insert + analytics */
 export async function saveUserTicket(
   ticket: StoredTicket
 ): Promise<{ ok: true } | { ok: false; reason: "storage" | "remote" }> {
@@ -101,14 +102,12 @@ export async function saveUserTicket(
   if (!stored.ok) return stored;
 
   const userId = await getCurrentUserId();
-  if (!userId) return { ok: true };
-
   const backForRemote =
     normalized.backImage && normalized.backImage.length < 400_000
       ? normalized.backImage
       : undefined;
 
-  const { ok, id: supabaseId } = await saveTicketToSupabase({
+  const remoteInput = {
     emotion: normalized.emotions,
     concertName: normalized.concertName || undefined,
     artist: normalized.artist || undefined,
@@ -117,7 +116,11 @@ export async function saveUserTicket(
     date: normalized.date || undefined,
     day: normalized.day || undefined,
     backImage: backForRemote,
-  });
+  };
+
+  const { ok, id: supabaseId } = userId
+    ? await saveTicketToSupabase(remoteInput)
+    : await publishGuestTicketToSupabase(remoteInput);
 
   if (!ok || !supabaseId) {
     const local = loadStoredTickets();
@@ -129,7 +132,7 @@ export async function saveUserTicket(
 
   await trackEvent({
     eventName: "ticket_publish_success",
-    userId,
+    userId: userId ?? null,
     path: "/create/complete",
     metadata: {
       ticketId: supabaseId,
@@ -139,12 +142,18 @@ export async function saveUserTicket(
       venue: normalized.venue,
       dateLabel: normalized.date,
       dayLabel: normalized.day,
+      guest: !userId,
     },
   });
 
-  const local = loadStoredTickets();
-  const remote = await fetchUserStoredTickets();
-  await cacheTicketsLocally(mergeTicketLists(remote, local));
+  if (userId) {
+    const local = loadStoredTickets();
+    const remote = await fetchUserStoredTickets();
+    await cacheTicketsLocally(mergeTicketLists(remote, local));
+  } else {
+    const local = loadStoredTickets();
+    await cacheTicketsLocally(local);
+  }
 
   return { ok: true };
 }
