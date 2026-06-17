@@ -89,7 +89,7 @@ function CompleteContent() {
 
     clearTicketDraft();
     await clearBackImageDraft();
-    router.push("/report");
+    router.push("/main");
   };
 
   const handleShareToGallery = async () => {
