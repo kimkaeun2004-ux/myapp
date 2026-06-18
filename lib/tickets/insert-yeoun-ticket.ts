@@ -21,7 +21,7 @@ export async function insertYeounTicketRow(
     emotions: input.emotion.trim(),
     concert_name: input.concertName?.trim() || null,
     artist: input.artist?.trim() || null,
-    quote: input.quote?.trim() || null,
+    quote: input.quote?.trim() ?? "",
     venue: input.venue?.trim() || null,
     date_label: input.date?.trim() || null,
     day_label: input.day?.trim() || null,
@@ -37,8 +37,8 @@ export async function insertYeounTicketRow(
   if (error && isMissingColumnError(error.message)) {
     const minimal = {
       user_id: userId,
-      emotions: input.emotion,
-      quote: input.quote ?? null,
+      emotions: input.emotion.trim(),
+      quote: input.quote?.trim() ?? "",
       back_image: input.backImage ?? null,
     };
     ({ data, error } = await client
